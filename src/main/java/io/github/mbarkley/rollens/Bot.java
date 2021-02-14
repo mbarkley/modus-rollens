@@ -1,44 +1,46 @@
 package io.github.mbarkley.rollens;
 
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.requests.GatewayIntent;
 
-import javax.security.auth.login.LoginException;
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
-public class Bot extends ListenerAdapter
-{
-    public static void main(String[] args) throws LoginException
-    {
-        if (args.length < 1) {
-            System.out.println("You have to provide a token as first argument!");
-            System.exit(1);
-        }
-        // args[0] should be the token
-        // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
-        // All other events will be disabled.
-        JDABuilder.createLight(args[0], GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-                  .addEventListeners(new Bot())
-                  .setActivity(Activity.playing("Type !ping"))
-                  .build();
-    }
-    
+@Slf4j
+public class Bot extends ListenerAdapter {
+    private static final String COMMAND_PREFIX = "!mr ";
+    private static final Pattern SIMPLE_ROLL = Pattern.compile("^!mr\\s+((\\d+)d(\\d+))\\s*");
+
     @Override
-    public void onMessageReceived(MessageReceivedEvent event)
-    {
+    public void onMessageReceived(MessageReceivedEvent event) {
         Message msg = event.getMessage();
-        if (msg.getContentRaw().equals("!ping"))
-        {
-            MessageChannel channel = event.getChannel();
-            long time = System.currentTimeMillis();
-            channel.sendMessage("Pong!") /* => RestAction<Message> */
-                   .queue(response /* => Message */ -> {
-                       response.editMessageFormat("Pong: %d ms", System.currentTimeMillis() - time).queue();
-                   });
+        if (msg.getContentRaw().startsWith(COMMAND_PREFIX)) {
+            Matcher matcher = SIMPLE_ROLL.matcher(msg.getContentRaw());
+            if (matcher.matches()) {
+                try {
+                    int numberOfDice = Integer.parseInt(matcher.group(2));
+                    int numberOfSides = Integer.parseInt(matcher.group(3));
+                    ThreadLocalRandom rand = ThreadLocalRandom.current();
+                    int[] rawRolls = IntStream.generate(() -> rand.nextInt(1, numberOfSides + 1))
+                                              .limit(numberOfDice)
+                                              .toArray();
+                    int sum = Arrays.stream(rawRolls).sum();
+                    MessageChannel channel = event.getChannel();
+                    channel.sendMessageFormat("%s Roll: `%s`\nResult: %d",
+                                              msg.getAuthor().getName(),
+                                              Arrays.toString(rawRolls),
+                                              sum)
+                           .queue();
+                } catch (NumberFormatException nfe) {
+                    log.debug("Failed to parse numbers in command: {}", msg.getContentRaw());
+                }
+            }
         }
     }
 }

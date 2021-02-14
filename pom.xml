@@ -11,6 +11,7 @@
     <properties>
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
+        <lombok-maven-plugin.version>1.18.8.1</lombok-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -24,6 +25,12 @@
                     <artifactId>opus-java</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <version>${lombok-maven-plugin.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
