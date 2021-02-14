@@ -1,12 +1,14 @@
 package io.github.mbarkley.rollens;
 
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,7 +35,9 @@ public class Bot extends ListenerAdapter {
                     int sum = Arrays.stream(rawRolls).sum();
                     MessageChannel channel = event.getChannel();
                     channel.sendMessageFormat("%s Roll: `%s`\nResult: %d",
-                                              msg.getAuthor().getName(),
+                                              Optional.ofNullable(msg.getMember())
+                                                      .map(Member::getNickname)
+                                                      .orElseGet(() -> msg.getAuthor().getName()),
                                               Arrays.toString(rawRolls),
                                               sum)
                            .queue();
