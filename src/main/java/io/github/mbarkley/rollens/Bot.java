@@ -12,19 +12,30 @@ import static java.lang.String.format;
 @Slf4j
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
-    private static final String COMMAND_PREFIX = "!mr ";
     private final Parser parser;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         Message msg = event.getMessage();
+        log.debug("Parsing message from guild/channel=[{}/{}]", msg.getGuild().getName(), msg.getChannel().getName());
         parser.parse(msg)
         .ifPresent(command -> {
             try {
+                log.debug("Executing command: {}", command);
                 command.execute()
-                       .thenAccept(responseText -> event.getChannel().sendMessage(responseText).queue());
+                       .whenComplete((responseText, ex) -> {
+                           if (ex != null) {
+                               log.warn("Encountered error for message.id={}: {}", msg.getId(), ex.getMessage());
+                               if (log.isDebugEnabled()) {
+                                   log.debug("Exception stacktrace", ex);
+                               }
+                           } else {
+                               log.debug("Sending response text for message.id={}", msg.getId());
+                               event.getChannel().sendMessage(responseText).queue();
+                           }
+                       });
             } catch (Exception e) {
-                log.warn(format("Error while executing command [%s]", msg.getContentRaw()), e);
+                log.warn(format("Error while executing command message.id=%s", msg.getId()), e);
             }
         });
     }

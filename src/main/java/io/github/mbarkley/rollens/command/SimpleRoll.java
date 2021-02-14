@@ -1,6 +1,7 @@
 package io.github.mbarkley.rollens.command;
 
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -13,7 +14,9 @@ import java.util.stream.IntStream;
 import static java.lang.String.format;
 
 @RequiredArgsConstructor
+@ToString
 public class SimpleRoll implements Command {
+    @ToString.Exclude
     private final Message message;
     private final int numberOfDice;
     private final int numberOfSides;
@@ -25,7 +28,7 @@ public class SimpleRoll implements Command {
                                   .limit(numberOfDice)
                                   .toArray();
         int sum = Arrays.stream(rawRolls).sum();
-        String responseText = format("%s Roll: `%s`\nResult: %d",
+        String responseText = format("%s roll: `%s`\nResult: %d",
                                      Optional.ofNullable(message.getMember())
                                              .map(Member::getNickname)
                                              .orElseGet(() -> message.getAuthor().getName()),
