@@ -11,10 +11,10 @@ import java.util.List;
 @RegisterBeanMapper(SavedRoll.class)
 public interface SavedRollsDao {
   @SqlUpdate("""
-      INSERT INTO saved_rolls (guild_id, roll_name, arity, parameters, expression)
+      INSERT OR REPLACE INTO saved_rolls (guild_id, roll_name, arity, parameters, expression)
                   values (:guildId, :rollName, :arity, :encodedParameters, :expression)
       """)
-  void insert(@BindBean SavedRoll saved);
+  void insertOrReplace(@BindBean SavedRoll saved);
 
   @SqlQuery("""
       SELECT *
@@ -22,4 +22,5 @@ public interface SavedRollsDao {
       WHERE saved_rolls.guild_id = :id
       """)
   List<SavedRoll> findByGuild(@Bind("id") long guildId);
+
 }

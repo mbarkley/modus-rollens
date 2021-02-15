@@ -74,6 +74,28 @@ public class EvalTest {
   }
 
   @Test
+  public void saving_should_overwrite() throws InterruptedException, ExecutionException, TimeoutException {
+    final Save firstSave = new Save("foo1",
+                             List.of("a"),
+                             "{a}d6");
+    final Save secondSave = new Save("foo1",
+                             List.of("a"),
+                             "{a}d10");
+    testMessage.setGuild(new TestGuild(123));
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    firstSave.execute(context)
+             .thenCompose(output -> secondSave.execute(context))
+             .get(5, TimeUnit.SECONDS);
+
+    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+
+    Assertions.assertEquals("""
+                                __Saved Rolls__
+                                `(foo1 a) = {a}d10`""",
+                            loaded);
+  }
+
+  @Test
   public void list_should_show_only_saved_from_relevant_guild() throws InterruptedException, ExecutionException, TimeoutException {
     // Setup
     save_and_list_should_show_all_saved();

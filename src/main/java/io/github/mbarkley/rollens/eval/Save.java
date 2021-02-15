@@ -28,7 +28,7 @@ public class Save implements Command {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();
         SavedRoll savedRoll = new SavedRoll(guildId, identifier, parameters, rhs);
-        handle.attach(SavedRollsDao.class).insert(savedRoll);
+        handle.attach(SavedRollsDao.class).insertOrReplace(savedRoll);
 
         return format("Saved (%s)", Stream.concat(Stream.of(identifier), parameters.stream())
                                           .collect(Collectors.joining(" ")));
