@@ -1,24 +1,31 @@
 package io.github.mbarkley.rollens;
 
 import io.github.mbarkley.rollens.parse.Parser;
+import io.github.mbarkley.rollens.util.EnvUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
 import javax.security.auth.login.LoginException;
+import java.util.concurrent.ForkJoinPool;
 
+@Slf4j
 public class Main {
   public static void main(String[] args) throws LoginException {
-    if (args.length < 1) {
-      System.out.println("You have to provide a token as first argument!");
-      System.exit(1);
-    }
-    // args[0] should be the token
+    final String token = EnvUtil.requireEnvString("DISCORD_TOKEN");
+    log.info("Starting up...");
+    log.info("Available processors: {}", Runtime.getRuntime().availableProcessors());
+    log.info("Fork join common pool parallelism: {}", ForkJoinPool.getCommonPoolParallelism());
+    log.info("Available JVM memory: {}MB", Runtime.getRuntime().maxMemory() / 1000000L);
+
     // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
     // All other events will be disabled.
-    JDABuilder.createLight(args[0], GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+    JDABuilder.create(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
               .addEventListeners(new Bot(new Parser()))
+              .setAutoReconnect(true)
               .setActivity(Activity.listening("!mr"))
+              .setCallbackPool(ForkJoinPool.commonPool(), true)
               .build();
   }
 }
