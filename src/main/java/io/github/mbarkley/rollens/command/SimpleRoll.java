@@ -1,5 +1,6 @@
 package io.github.mbarkley.rollens.command;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.dv8tion.jda.api.entities.Member;
@@ -15,14 +16,13 @@ import static java.lang.String.format;
 
 @RequiredArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class SimpleRoll implements Command {
-    @ToString.Exclude
-    private final Message message;
     private final int numberOfDice;
     private final int numberOfSides;
 
     @Override
-    public CompletableFuture<String> execute() {
+    public CompletableFuture<String> execute(Message message) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         int[] rawRolls = IntStream.generate(() -> rand.nextInt(1, numberOfSides + 1))
                                   .limit(numberOfDice)

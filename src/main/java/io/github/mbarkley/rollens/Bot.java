@@ -16,26 +16,26 @@ public class Bot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        Message msg = event.getMessage();
-        log.debug("Parsing message from guild/channel=[{}/{}]", msg.getGuild().getName(), msg.getChannel().getName());
-        parser.parse(msg)
+        Message message = event.getMessage();
+        log.debug("Parsing message from guild/channel=[{}/{}]", message.getGuild().getName(), message.getChannel().getName());
+        parser.parse(message)
         .ifPresent(command -> {
             try {
                 log.debug("Executing command: {}", command);
-                command.execute()
+                command.execute(message)
                        .whenComplete((responseText, ex) -> {
                            if (ex != null) {
-                               log.warn("Encountered error for message.id={}: {}", msg.getId(), ex.getMessage());
+                               log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
                                if (log.isDebugEnabled()) {
                                    log.debug("Exception stacktrace", ex);
                                }
                            } else {
-                               log.debug("Sending response text for message.id={}", msg.getId());
+                               log.debug("Sending response text for message.id={}", message.getId());
                                event.getChannel().sendMessage(responseText).queue();
                            }
                        });
             } catch (Exception e) {
-                log.warn(format("Error while executing command message.id=%s", msg.getId()), e);
+                log.warn(format("Error while executing command message.id=%s", message.getId()), e);
             }
         });
     }

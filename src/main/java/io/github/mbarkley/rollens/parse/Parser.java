@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.entities.Message;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import java.util.Objects;
@@ -33,7 +32,7 @@ public class Parser {
 
         try {
             final CommandParser.CommandContext commandContext = parser.command();
-            final CommandParserVisitor visitor = new CommandParserVisitor(message);
+            final CommandParserVisitor visitor = new CommandParserVisitor();
 
             if (commandContext.START() != null && commandContext.START().getText().equals("!mr")) {
                 if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", message.getContentRaw());
@@ -53,7 +52,6 @@ public class Parser {
 
     @RequiredArgsConstructor
     private static class CommandParserVisitor extends CommandParserBaseVisitor<Command> {
-        private final Message message;
 
         @Override
         public Command visitCommand(CommandParser.CommandContext ctx) {
@@ -82,10 +80,9 @@ public class Parser {
                 if (log.isTraceEnabled()) {
                     log.trace("Returning simple roll command for {}", ctx.ROLL().getText());
                 }
-                return new SimpleRoll(message, numberOfDice, numberOfSides);
+                return new SimpleRoll(numberOfDice, numberOfSides);
             } else {
-                throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Message: " + message
-                        .getContentRaw());
+                throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Input: " + ctx.getText());
             }
         }
     }
