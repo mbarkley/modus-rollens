@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jdbi.v3.core.Jdbi;
 
 import static java.lang.String.format;
 
@@ -13,25 +14,28 @@ import static java.lang.String.format;
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
   private final Parser parser;
+  private final Jdbi jdbi;
 
   @Override
   public void onMessageReceived(MessageReceivedEvent event) {
     Message message = event.getMessage();
-    log.debug("Parsing message from guild/channel=[{}/{}]", message.getGuild().getName(), message.getChannel()
-                                                                                                 .getName());
+    if (log.isDebugEnabled()) {
+      log.debug("Parsing message from guild/channel=[{}/{}]",
+                message.getGuild().getName(),
+                message.getChannel().getName());
+    }
     parser.parse(message)
           .ifPresent(command -> {
             try {
-              log.info("Executing guild/channel/command=[{}/{}/{}]", message.getGuild().getId(), message.getChannel()
-                                                                                                        .getId(), command);
+              log.info("Executing guild/channel/command=[{}/{}/{}]",
+                       message.getGuild().getId(),
+                       message.getChannel().getId(), command);
               log.debug("Executing command: {}", command);
               command.execute(message)
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
-                         if (log.isDebugEnabled()) {
-                           log.debug("Exception stacktrace", ex);
-                         }
+                         log.debug("Exception stacktrace", ex);
                        } else {
                          log.debug("Sending response text for message.id={}", message.getId());
                          event.getChannel().sendMessage(responseText).queue();
