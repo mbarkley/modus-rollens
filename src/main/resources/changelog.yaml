@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: mbarkley
+      changes:
+        - createTable:
+            tableName: saved_rolls
+            columns:
+              - column:
+                  name: guild_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: roll_name
+                  type: varchar
+                  constraints:
+                    nullable: false
+              - column:
+                  name: arity
+                  type: tinyint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expression
+                  type: varchar
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_saved_rolls
+            tableName: saved_rolls
+            unique: true
+            columns:
+              - column:
+                  name: guild_id
+              - column:
+                  name: roll_name
+              - column:
+                  name: arity
