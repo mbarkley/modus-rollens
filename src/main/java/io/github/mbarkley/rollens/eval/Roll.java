@@ -23,8 +23,10 @@ public class Roll implements Command {
   private final ResultMapper resultMapper;
 
   @Override
-  public CompletableFuture<String> execute(Random rand, Message message) {
+  public CompletableFuture<String> execute(ExecutionContext context) {
+    final Random rand = context.getRand();
     final int[] rolls = base.execute(rand);
+    final Message message = context.getMessage();
     final String username = MessageUtil.getAuthorDisplayName(message);
     State state = new State(rolls, format("%s roll: `%s`", username, Arrays.toString(rolls)));
     for (RollModifier rollModifier : rollModifiers) {

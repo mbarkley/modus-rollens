@@ -2,17 +2,16 @@ lexer grammar CommandLexer;
 
 WHITESPACE : (' ' | '\t')+ -> skip;
 
-// Keywords
 NUMBER : [0-9]+;
 
 // Dice modifiers
-TNUM : 't' NUMBER;
+TNUM : 't' VALUE;
 
-FNUM : 'f' NUMBER;
+FNUM : 'f' VALUE;
 
-ENUM : 'e' NUMBER;
+ENUM : 'e' VALUE;
 
-IENUM : 'ie' NUMBER;
+IENUM : 'ie' VALUE;
 
 // Arithmetic symbols
 TIMES : '*';
@@ -44,11 +43,16 @@ GTE : '>=';
 
 EQ : '=';
 
+// Keywords
 // Dice pool symbols
 fragment D : ('d' | 'D');
 
-ROLL : NUMBER? D NUMBER;
+ROLL : VALUE? D VALUE;
+
+VALUE : (NUMBER | '{' IDENTIFIER '}');
 
 EXCLAMATION : '!';
 
 START : EXCLAMATION 'mr';
+
+IDENTIFIER : [a-zA-Z][a-zA-Z_0-9]*;

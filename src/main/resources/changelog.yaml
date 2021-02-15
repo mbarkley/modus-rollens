@@ -22,6 +22,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: parameters
+                  type: varchar
+                  constraints:
+                    nullable: true
+              - column:
                   name: expression
                   type: varchar
                   constraints:

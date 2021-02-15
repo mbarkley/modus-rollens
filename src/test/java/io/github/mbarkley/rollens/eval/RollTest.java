@@ -1,7 +1,9 @@
 package io.github.mbarkley.rollens.eval;
 
+import io.github.mbarkley.rollens.db.DbUtil;
 import io.github.mbarkley.rollens.jda.TestMember;
 import io.github.mbarkley.rollens.jda.TestMessage;
+import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -9,6 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -20,19 +24,24 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RollTest {
   TestMessage testMessage;
+  Jdbi jdbi;
 
   @BeforeAll
-  public void setup() {
+  public void setup() throws IOException {
     testMessage = new TestMessage("");
     final TestMember member = new TestMember();
     member.setNickname("Test User");
     testMessage.setMember(member);
+
+    final File dbFile = File.createTempFile("modus-rollens", ".db");
+    dbFile.deleteOnExit();
+    jdbi = DbUtil.initDb(dbFile.getAbsolutePath());
   }
 
   @MethodSource("correctResults")
   @ParameterizedTest(name = "Roll \"{1}\" should have result \"{2}\"")
   public void roll_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
-    final CompletableFuture<String> executed = roll.execute(rand, testMessage);
+    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(jdbi, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
     Assertions.assertEquals(result, observed);

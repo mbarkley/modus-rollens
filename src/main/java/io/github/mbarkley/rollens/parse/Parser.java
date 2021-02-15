@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Parser {
@@ -62,10 +64,24 @@ public class Parser {
 
     @Override
     public Command visitExpression(CommandParser.ExpressionContext ctx) {
-      return Objects.requireNonNull(switch (ctx.getRuleIndex()) {
+      return Objects.requireNonNull(switch (ctx.getAltNumber()) {
         case 1 -> visitRoll(ctx.roll());
-        default -> throw new IllegalStateException("Unknown rule index " + ctx.getRuleIndex());
+        case 2 -> visitSave(ctx.save());
+        default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command visitSave(CommandParser.SaveContext ctx) {
+      final String identifier = ctx.IDENTIFIER(1).getText();
+      final List<String> params = ctx.IDENTIFIER()
+                                     .subList(2, ctx.IDENTIFIER().size())
+                                     .stream()
+                                     .map(TerminalNode::getText)
+                                     .collect(Collectors.toList());
+      final String rhs = ctx.roll().getText();
+
+      return new Save(identifier, params, rhs);
     }
 
     @Override

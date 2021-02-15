@@ -16,6 +16,14 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public class ParserTest {
   Parser parser = new Parser();
 
+  @ParameterizedTest(name = "Should save \"{0}\" as {1}")
+  @MethodSource("saves")
+  public void should_parse_save(String input, Object result) {
+    final TestMessage message = new TestMessage(input);
+    final Optional<Command> parsed = parser.parse(message);
+    Assertions.assertEquals(Optional.of(result), parsed);
+  }
+
   @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
   @MethodSource("rolls")
   public void should_parse_roll(String input, Object result) {
@@ -30,6 +38,13 @@ public class ParserTest {
     final TestMessage message = new TestMessage(input);
     final Optional<Command> parsed = parser.parse(message);
     Assertions.assertEquals(Optional.empty(), parsed);
+  }
+
+  private static Stream<Arguments> saves() {
+    return Stream.of(
+        arguments("!mr save (foo a b c) = 2d6", new Save("foo", List.of("a", "b", "c"), "2d6")),
+        arguments("!mr save (foo a b c) = {a}d{b} t{c} f1", new Save("foo", List.of("a", "b", "c"), "{a}d{b}t{c}f1"))
+    );
   }
 
   private static Stream<Arguments> rolls() {

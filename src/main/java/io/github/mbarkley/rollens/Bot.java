@@ -1,5 +1,6 @@
 package io.github.mbarkley.rollens;
 
+import io.github.mbarkley.rollens.eval.Command;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class Bot extends ListenerAdapter {
                        message.getGuild().getId(),
                        message.getChannel().getId(), command);
               log.debug("Executing command: {}", command);
-              command.execute(ThreadLocalRandom.current(), message)
+              command.execute(new Command.ExecutionContext(jdbi, ThreadLocalRandom.current(), message))
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
