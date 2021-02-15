@@ -19,16 +19,8 @@ public class ParserTest {
     Parser parser = new Parser();
 
     @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
-    @MethodSource("simpleRolls")
-    public void shouldParseSimpleRoll(String input, Object result) {
-        final TestMessage message = new TestMessage(input);
-        final Optional<Command> parsed = parser.parse(message);
-        Assertions.assertEquals(Optional.of(result), parsed);
-    }
-
-    @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
-    @MethodSource("successCounts")
-    public void shouldParseSuccessCount(String input, Object result) {
+    @MethodSource("rolls")
+    public void shouldParseRoll(String input, Object result) {
         final TestMessage message = new TestMessage(input);
         final Optional<Command> parsed = parser.parse(message);
         Assertions.assertEquals(Optional.of(result), parsed);
@@ -42,22 +34,27 @@ public class ParserTest {
         Assertions.assertEquals(Optional.empty(), parsed);
     }
 
-    private static Stream<Arguments> simpleRolls() {
+    private static Stream<Arguments> rolls() {
         return Stream.of(
-                arguments("!mr 2d6", new Roll(new SimpleRoll(2, 6), List.of(), new SumMapper())),
-                arguments("!mr 1d10", new Roll(new SimpleRoll(1, 10), List.of(), new SumMapper())),
-                arguments("!mr 2D6", new Roll(new SimpleRoll(2, 6), List.of(), new SumMapper())),
-                arguments("!mr d6", new Roll(new SimpleRoll(1, 6), List.of(), new SumMapper())),
-                arguments("!mr D6", new Roll(new SimpleRoll(1, 6), List.of(), new SumMapper()))
-        );
-    }
-
-    private static Stream<Arguments> successCounts() {
-        return Stream.of(
-                arguments("!mr 2d6 t6", new Roll(new SimpleRoll(2, 6), List.of(), new SuccessCountRoll(6, 0))),
-                arguments("!mr 2d10 t7", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 0))),
-                arguments("!mr 2d10 t7 f2", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 2))),
-                arguments("!mr 2d10 f2 t7", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 2)))
+                // sum rolls
+                arguments("!mr 2d6", new Roll(new BaseRoll(2, 6), List.of(), new SumMapper())),
+                arguments("!mr 1d10", new Roll(new BaseRoll(1, 10), List.of(), new SumMapper())),
+                arguments("!mr 2D6", new Roll(new BaseRoll(2, 6), List.of(), new SumMapper())),
+                arguments("!mr d6", new Roll(new BaseRoll(1, 6), List.of(), new SumMapper())),
+                arguments("!mr D6", new Roll(new BaseRoll(1, 6), List.of(), new SumMapper())),
+                // success counts
+                arguments("!mr 2d6 t6", new Roll(new BaseRoll(2, 6), List.of(), new SuccessCountMapper(6, 0))),
+                arguments("!mr 2d10 t7", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 0))),
+                arguments("!mr 2d10 t7 f2", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 2))),
+                arguments("!mr 2d10 f2 t7", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 2))),
+                // exploding sum
+                arguments("!mr 2d6 e6", new Roll(new BaseRoll(2, 6), List.of(new ExplodingModifier(6, 1)), new SumMapper())),
+                arguments("!mr 2d6 ie6", new Roll(new BaseRoll(2, 6), List.of(new ExplodingModifier(6, Integer.MAX_VALUE)), new SumMapper())),
+                // exploding success count
+                arguments("!mr 2d10 t7 e10", new Roll(new BaseRoll(2, 10), List.of(new ExplodingModifier(10, 1)), new SuccessCountMapper(7, 0))),
+                arguments("!mr 2d10 t7 ie10", new Roll(new BaseRoll(2, 10), List.of(new ExplodingModifier(10, Integer.MAX_VALUE)), new SuccessCountMapper(7, 0))),
+                arguments("!mr 2d10 t7 f2 e10", new Roll(new BaseRoll(2, 10), List.of(new ExplodingModifier(10, 1)), new SuccessCountMapper(7, 2))),
+                arguments("!mr 2d10 t7 f2 ie10", new Roll(new BaseRoll(2, 10), List.of(new ExplodingModifier(10, Integer.MAX_VALUE)), new SuccessCountMapper(7, 2)))
         );
     }
 

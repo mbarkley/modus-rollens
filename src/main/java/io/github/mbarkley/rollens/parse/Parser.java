@@ -4,6 +4,7 @@ import io.github.mbarkley.rollens.antlr.CommandLexer;
 import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
 import io.github.mbarkley.rollens.eval.*;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
@@ -12,6 +13,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -77,20 +79,56 @@ public class Parser {
                         1 :
                         Integer.parseInt(matcher.group(1));
                 final int numberOfSides = Integer.parseInt(matcher.group(2));
-                if (ctx.modifiers() == null) {
-                    return new Roll(new SimpleRoll(numberOfDice, numberOfSides), List.of(), new SumMapper());
-                } else if (ctx.modifiers().successModifiers() != null) {
-                    final CommandParser.SuccessModifiersContext successCtx = ctx.modifiers().successModifiers();
+                final BaseRoll base = new BaseRoll(numberOfDice, numberOfSides);
+                final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
+                return new Roll(base, modifiers.rollModifiers, modifiers.resultMapper);
+            } else {
+                throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Input: " + ctx.getText());
+            }
+        }
+    }
+
+    @RequiredArgsConstructor
+    private static class ModifierVisitor extends CommandParserBaseVisitor<ModifierVisitor.Modifiers> {
+
+        @Data
+        private static class Modifiers {
+            List<RollModifier> rollModifiers = new ArrayList<>(2);
+            ResultMapper resultMapper = new SumMapper();
+        }
+
+        @Override
+        public Modifiers visitModifiers(CommandParser.ModifiersContext ctx) {
+            if (ctx == null) {
+                return new Modifiers();
+            } else {
+                final Modifiers modifiers = visitModifiers(ctx.modifiers());
+                if (ctx.successModifiers() != null) {
+                    final CommandParser.SuccessModifiersContext successCtx = ctx.successModifiers();
                     int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
                     int failureThreshold = successCtx.FNUM() != null
                             ? Integer.parseInt(successCtx.FNUM().getText().substring(1))
                             : 0;
-                    return new Roll(new SimpleRoll(numberOfDice, numberOfSides), List.of(), new SuccessCountRoll(successThreshold, failureThreshold));
+                    modifiers.resultMapper = new SuccessCountMapper(successThreshold, failureThreshold);
                 } else {
-                    throw new IllegalStateException("Unknown state for context " + ctx.getText());
+                    modifiers.resultMapper = new SumMapper();
                 }
-            } else {
-                throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Input: " + ctx.getText());
+
+                if (ctx.explosionModifiers() != null) {
+                    final CommandParser.ExplosionModifiersContext explosionModifiersCtx = ctx.explosionModifiers();
+                    final int explosionThreshold;
+                    final int maxIterations;
+                    if (explosionModifiersCtx.ENUM() != null) {
+                        explosionThreshold = Integer.parseInt(explosionModifiersCtx.ENUM().getText().substring(1));
+                        maxIterations = 1;
+                    } else {
+                        explosionThreshold = Integer.parseInt(explosionModifiersCtx.IENUM().getText().substring(2));
+                        maxIterations = Integer.MAX_VALUE;
+                    }
+                    modifiers.rollModifiers.add(new ExplodingModifier(explosionThreshold, maxIterations));
+                }
+
+                return modifiers;
             }
         }
     }

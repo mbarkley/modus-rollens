@@ -8,20 +8,22 @@ import net.dv8tion.jda.api.entities.Message;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
 public class Roll implements Command {
-    private final SimpleRoll base;
+    private final BaseRoll base;
     private final List<RollModifier> rollModifiers;
     private final ResultMapper resultMapper;
 
     @Override
     public CompletableFuture<String> execute(Message message, Formatter formatter) {
-        int[] rawRolls = base.execute();
+        final ThreadLocalRandom rand = ThreadLocalRandom.current();
+        int[] rawRolls = base.execute(rand);
         for (RollModifier rollModifier : rollModifiers) {
-            rawRolls = rollModifier.modify(rawRolls);
+            rawRolls = rollModifier.modify(rand, base, rawRolls);
         }
 
         return CompletableFuture.completedFuture(resultMapper.mapResult(message, formatter, rawRolls));

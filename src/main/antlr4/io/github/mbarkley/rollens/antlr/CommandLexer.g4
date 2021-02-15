@@ -10,6 +10,10 @@ TNUM : 't' NUMBER;
 
 FNUM : 'f' NUMBER;
 
+ENUM : 'e' NUMBER;
+
+IENUM : 'ie' NUMBER;
+
 // Arithmetic symbols
 TIMES : '*';
 

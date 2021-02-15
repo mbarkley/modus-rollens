@@ -19,6 +19,12 @@ roll
 
 modifiers
     : successModifiers modifiers?
+    | explosionModifiers modifiers?
+    ;
+
+explosionModifiers
+    : ENUM
+    | IENUM
     ;
 
 successModifiers
