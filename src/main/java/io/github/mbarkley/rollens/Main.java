@@ -10,6 +10,8 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.security.auth.login.LoginException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 
 @Slf4j
@@ -27,7 +29,7 @@ public class Main {
     // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
     // All other events will be disabled.
     JDABuilder.create(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-              .addEventListeners(new Bot(new Parser(), jdbi))
+              .addEventListeners(new Bot(new Parser(), jdbi, Executors.newCachedThreadPool()))
               .setAutoReconnect(true)
               .setActivity(Activity.listening("!mr"))
               .setCallbackPool(ForkJoinPool.commonPool(), true)

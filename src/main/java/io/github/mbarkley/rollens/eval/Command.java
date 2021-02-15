@@ -6,6 +6,7 @@ import org.jdbi.v3.core.Jdbi;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 public interface Command {
 
@@ -17,6 +18,7 @@ public interface Command {
 
   @Value
   class ExecutionContext {
+    ExecutorService executorService;
     Jdbi jdbi;
     Random rand;
     Message message;

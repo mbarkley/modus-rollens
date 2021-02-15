@@ -1,12 +1,11 @@
 package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.DbUtil;
+import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
 import io.github.mbarkley.rollens.jda.TestMessage;
 import org.jdbi.v3.core.Jdbi;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -15,33 +14,83 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RollTest {
+public class EvalTest {
   TestMessage testMessage;
   Jdbi jdbi;
+  ExecutorService executorService;
 
-  @BeforeAll
+  @BeforeEach
   public void setup() throws IOException {
     testMessage = new TestMessage("");
     final TestMember member = new TestMember();
     member.setNickname("Test User");
     testMessage.setMember(member);
 
-    final File dbFile = File.createTempFile("modus-rollens", ".db");
+    final File dbFile = File.createTempFile("modus-rollens-", ".db");
     dbFile.deleteOnExit();
     jdbi = DbUtil.initDb(dbFile.getAbsolutePath());
+    executorService = Executors.newFixedThreadPool(10);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    executorService.shutdownNow();
+  }
+
+  @Test
+  public void save_and_list_should_show_all_saved() throws InterruptedException, ExecutionException, TimeoutException {
+    final List<Save> saves = List.of(
+        new Save("foo0",
+                 List.of(),
+                 "2d6"),
+        new Save("foo1",
+                 List.of("a"),
+                 "{a}d6"),
+        new Save("foo3",
+                 List.of("a", "b", "c"),
+                 "{a}d{b} t{c}")
+    );
+    testMessage.setGuild(new TestGuild(123));
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    final CompletableFuture[] futures = saves.stream()
+                                             .map(save -> save.execute(context))
+                                             .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
+
+    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+
+    Assertions.assertEquals("""
+                                __Saved Rolls__
+                                `(foo0) = 2d6`
+                                `(foo1 a) = {a}d6`
+                                `(foo3 a b c) = {a}d{b} t{c}`""",
+                            loaded);
+  }
+
+  @Test
+  public void list_should_show_only_saved_from_relevant_guild() throws InterruptedException, ExecutionException, TimeoutException {
+    // Setup
+    save_and_list_should_show_all_saved();
+    testMessage.setGuild(new TestGuild(321));
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+
+    Assertions.assertEquals("""
+                                __Saved Rolls__
+                                No saved rolls""",
+                            loaded);
   }
 
   @MethodSource("correctResults")
   @ParameterizedTest(name = "Roll \"{1}\" should have result \"{2}\"")
   public void roll_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
-    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(jdbi, rand, testMessage));
+    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
     Assertions.assertEquals(result, observed);

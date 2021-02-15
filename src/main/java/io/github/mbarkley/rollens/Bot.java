@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.String.format;
@@ -18,6 +19,7 @@ import static java.lang.String.format;
 public class Bot extends ListenerAdapter {
   private final Parser parser;
   private final Jdbi jdbi;
+  private final ExecutorService executorService;
 
   @Override
   public void onMessageReceived(MessageReceivedEvent event) {
@@ -34,7 +36,7 @@ public class Bot extends ListenerAdapter {
                        message.getGuild().getId(),
                        message.getChannel().getId(), command);
               log.debug("Executing command: {}", command);
-              command.execute(new Command.ExecutionContext(jdbi, ThreadLocalRandom.current(), message))
+              command.execute(new Command.ExecutionContext(executorService, jdbi, ThreadLocalRandom.current(), message))
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
