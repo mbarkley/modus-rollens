@@ -4,7 +4,7 @@ import io.github.mbarkley.rollens.format.Formatter;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import lombok.experimental.Wither;
+import lombok.With;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.Arrays;
@@ -12,6 +12,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
+@With
 public class SuccessCountMapper implements ResultMapper {
   private final int successThreshold;
   private final int failureThreshold;

@@ -106,13 +106,24 @@ public class Parser {
         final Modifiers modifiers = visitModifiers(ctx.modifiers());
         if (ctx.successModifiers() != null) {
           final CommandParser.SuccessModifiersContext successCtx = ctx.successModifiers();
-          int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
-          int failureThreshold = successCtx.FNUM() != null
-              ? Integer.parseInt(successCtx.FNUM().getText().substring(1))
-              : 0;
-          modifiers.resultMapper = new SuccessCountMapper(successThreshold, failureThreshold);
-        } else {
-          modifiers.resultMapper = new SumMapper();
+          if (successCtx.TNUM() != null) {
+            int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
+            if (modifiers.resultMapper instanceof SuccessCountMapper) {
+              modifiers.resultMapper = ((SuccessCountMapper) modifiers.resultMapper)
+                  .withSuccessThreshold(successThreshold);
+            } else {
+              modifiers.resultMapper = new SuccessCountMapper(successThreshold, 0);
+            }
+          }
+          if (successCtx.FNUM() != null) {
+            int failureThreshold = Integer.parseInt(successCtx.FNUM().getText().substring(1));
+            if (modifiers.resultMapper instanceof SuccessCountMapper) {
+              modifiers.resultMapper = ((SuccessCountMapper) modifiers.resultMapper)
+                  .withFailureThreshold(failureThreshold);
+            } else {
+              modifiers.resultMapper = new SuccessCountMapper(Integer.MAX_VALUE, failureThreshold);
+            }
+          }
         }
 
         if (ctx.explosionModifiers() != null) {

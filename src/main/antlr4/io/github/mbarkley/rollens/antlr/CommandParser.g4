@@ -29,6 +29,5 @@ explosionModifiers
 
 successModifiers
     : TNUM
-    | TNUM FNUM
-    | FNUM TNUM
+    | FNUM
     ;

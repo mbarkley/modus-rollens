@@ -44,9 +44,12 @@ public class ParserTest {
         arguments("!mr D6", new Roll(new BaseRoll(1, 6), List.of(), new SumMapper())),
         // success counts
         arguments("!mr 2d6 t6", new Roll(new BaseRoll(2, 6), List.of(), new SuccessCountMapper(6, 0))),
+        arguments("!mr 2d6 f1", new Roll(new BaseRoll(2, 6), List.of(), new SuccessCountMapper(Integer.MAX_VALUE, 1))),
         arguments("!mr 2d10 t7", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 0))),
         arguments("!mr 2d10 t7 f2", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 2))),
         arguments("!mr 2d10 f2 t7", new Roll(new BaseRoll(2, 10), List.of(), new SuccessCountMapper(7, 2))),
+        arguments("!mr 2d10 t7 e10 f1", new Roll(new BaseRoll(2, 10), List
+            .of(new ExplodingModifier(10, 1)), new SuccessCountMapper(7, 1))),
         // exploding sum
         arguments("!mr 2d6 e6", new Roll(new BaseRoll(2, 6), List.of(new ExplodingModifier(6, 1)), new SumMapper())),
         arguments("!mr 2d6 ie6", new Roll(new BaseRoll(2, 6), List
@@ -70,8 +73,7 @@ public class ParserTest {
         arguments("!mr 2d 6"),
         arguments("!mr -2d6"),
         arguments("!mr 2d-6"),
-        arguments("! mr 2d6"),
-        arguments("!mr 2d10 f1")
+        arguments("! mr 2d6")
     );
   }
 
