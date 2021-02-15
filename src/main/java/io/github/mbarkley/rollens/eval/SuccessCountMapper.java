@@ -13,23 +13,23 @@ import java.util.Arrays;
 @ToString
 @EqualsAndHashCode
 public class SuccessCountMapper implements ResultMapper {
-    private final int successThreshold;
-    private final int failureThreshold;
+  private final int successThreshold;
+  private final int failureThreshold;
 
-    @Override
-    public String mapResult(Message message, Formatter formatter, int[] rawRolls) {
-        int sum = Arrays.stream(rawRolls)
-                        .map(n -> {
-                            if (n >= successThreshold) {
-                                return 1;
-                            } else if (n <= failureThreshold) {
-                                return -1;
-                            } else {
-                                return 0;
-                            }
-                        })
-                        .sum();
+  @Override
+  public String mapResult(Message message, Formatter formatter, int[] rawRolls) {
+    int sum = Arrays.stream(rawRolls)
+                    .map(n -> {
+                      if (n >= successThreshold) {
+                        return 1;
+                      } else if (n <= failureThreshold) {
+                        return -1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                    .sum();
 
-        return formatter.formatResponse(message, rawRolls, sum);
-    }
+    return formatter.formatResponse(message, rawRolls, sum);
+  }
 }

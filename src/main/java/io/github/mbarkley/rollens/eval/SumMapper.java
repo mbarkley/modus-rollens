@@ -12,9 +12,9 @@ import java.util.Arrays;
 @ToString
 @EqualsAndHashCode
 public class SumMapper implements ResultMapper {
-    @Override
-    public String mapResult(Message message, Formatter formatter, int[] rawRolls) {
-        int sum = Arrays.stream(rawRolls).sum();
-        return formatter.formatResponse(message, rawRolls, sum);
-    }
+  @Override
+  public String mapResult(Message message, Formatter formatter, int[] rawRolls) {
+    int sum = Arrays.stream(rawRolls).sum();
+    return formatter.formatResponse(message, rawRolls, sum);
+  }
 }

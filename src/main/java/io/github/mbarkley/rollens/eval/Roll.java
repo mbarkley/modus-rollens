@@ -14,18 +14,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @ToString
 @EqualsAndHashCode
 public class Roll implements Command {
-    private final BaseRoll base;
-    private final List<RollModifier> rollModifiers;
-    private final ResultMapper resultMapper;
+  private final BaseRoll base;
+  private final List<RollModifier> rollModifiers;
+  private final ResultMapper resultMapper;
 
-    @Override
-    public CompletableFuture<String> execute(Message message, Formatter formatter) {
-        final ThreadLocalRandom rand = ThreadLocalRandom.current();
-        int[] rawRolls = base.execute(rand);
-        for (RollModifier rollModifier : rollModifiers) {
-            rawRolls = rollModifier.modify(rand, base, rawRolls);
-        }
-
-        return CompletableFuture.completedFuture(resultMapper.mapResult(message, formatter, rawRolls));
+  @Override
+  public CompletableFuture<String> execute(Message message, Formatter formatter) {
+    final ThreadLocalRandom rand = ThreadLocalRandom.current();
+    int[] rawRolls = base.execute(rand);
+    for (RollModifier rollModifier : rollModifiers) {
+      rawRolls = rollModifier.modify(rand, base, rawRolls);
     }
+
+    return CompletableFuture.completedFuture(resultMapper.mapResult(message, formatter, rawRolls));
+  }
 }

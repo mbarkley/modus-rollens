@@ -15,33 +15,35 @@ import static java.lang.String.format;
 @Slf4j
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
-    private final Parser parser;
-    private final Formatter formatter;
+  private final Parser parser;
+  private final Formatter formatter;
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        Message message = event.getMessage();
-        log.debug("Parsing message from guild/channel=[{}/{}]", message.getGuild().getName(), message.getChannel().getName());
-        parser.parse(message)
-        .ifPresent(command -> {
+  @Override
+  public void onMessageReceived(MessageReceivedEvent event) {
+    Message message = event.getMessage();
+    log.debug("Parsing message from guild/channel=[{}/{}]", message.getGuild().getName(), message.getChannel()
+                                                                                                 .getName());
+    parser.parse(message)
+          .ifPresent(command -> {
             try {
-                log.info("Executing guild/channel/command=[{}/{}/{}]", message.getGuild().getId(), message.getChannel().getId(), command);
-                log.debug("Executing command: {}", command);
-                command.execute(message, formatter)
-                       .whenComplete((responseText, ex) -> {
-                           if (ex != null) {
-                               log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
-                               if (log.isDebugEnabled()) {
-                                   log.debug("Exception stacktrace", ex);
-                               }
-                           } else {
-                               log.debug("Sending response text for message.id={}", message.getId());
-                               event.getChannel().sendMessage(responseText).queue();
-                           }
-                       });
+              log.info("Executing guild/channel/command=[{}/{}/{}]", message.getGuild().getId(), message.getChannel()
+                                                                                                        .getId(), command);
+              log.debug("Executing command: {}", command);
+              command.execute(message, formatter)
+                     .whenComplete((responseText, ex) -> {
+                       if (ex != null) {
+                         log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
+                         if (log.isDebugEnabled()) {
+                           log.debug("Exception stacktrace", ex);
+                         }
+                       } else {
+                         log.debug("Sending response text for message.id={}", message.getId());
+                         event.getChannel().sendMessage(responseText).queue();
+                       }
+                     });
             } catch (Exception e) {
-                log.warn(format("Error while executing command message.id=%s", message.getId()), e);
+              log.warn(format("Error while executing command message.id=%s", message.getId()), e);
             }
-        });
-    }
+          });
+  }
 }

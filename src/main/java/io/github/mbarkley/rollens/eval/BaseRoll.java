@@ -7,12 +7,12 @@ import java.util.stream.IntStream;
 
 @Value
 public class BaseRoll {
-    int numberOfDice;
-    int numberOfSides;
+  int numberOfDice;
+  int numberOfSides;
 
-    public int[] execute(Random rand) {
-        return IntStream.generate(() -> rand.nextInt(numberOfSides) + 1)
-                        .limit(numberOfDice)
-                        .toArray();
-    }
+  public int[] execute(Random rand) {
+    return IntStream.generate(() -> rand.nextInt(numberOfSides) + 1)
+                    .limit(numberOfDice)
+                    .toArray();
+  }
 }

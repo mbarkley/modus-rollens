@@ -7,8 +7,8 @@ import java.util.concurrent.CompletableFuture;
 
 public interface Command {
 
-    /**
-     * @return the text for a message to send in response
-     */
-    CompletableFuture<String> execute(Message message, Formatter formatter);
+  /**
+   * @return the text for a message to send in response
+   */
+  CompletableFuture<String> execute(Message message, Formatter formatter);
 }
