@@ -1,9 +1,7 @@
 package io.github.mbarkley.rollens.parse;
 
 import io.github.mbarkley.rollens.eval.*;
-import net.dv8tion.jda.api.entities.MessageActivity;
-import net.dv8tion.jda.internal.entities.AbstractMessage;
-import org.jetbrains.annotations.Nullable;
+import io.github.mbarkley.rollens.jda.TestMessage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,7 +18,7 @@ public class ParserTest {
 
   @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
   @MethodSource("rolls")
-  public void shouldParseRoll(String input, Object result) {
+  public void should_parse_roll(String input, Object result) {
     final TestMessage message = new TestMessage(input);
     final Optional<Command> parsed = parser.parse(message);
     Assertions.assertEquals(Optional.of(result), parsed);
@@ -28,7 +26,7 @@ public class ParserTest {
 
   @ParameterizedTest(name = "Should not parse \"{0}\"")
   @MethodSource("badExpressions")
-  public void shouldNotParseBadExpressions(String input) {
+  public void should_not_parse_bad_expressions(String input) {
     final TestMessage message = new TestMessage(input);
     final Optional<Command> parsed = parser.parse(message);
     Assertions.assertEquals(Optional.empty(), parsed);
@@ -77,26 +75,4 @@ public class ParserTest {
     );
   }
 
-  static class TestMessage extends AbstractMessage {
-
-    public TestMessage(String content) {
-      super(content, "", false);
-    }
-
-    @Override
-    protected void unsupported() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Nullable
-    @Override
-    public MessageActivity getActivity() {
-      return null;
-    }
-
-    @Override
-    public long getIdLong() {
-      return 123L;
-    }
-  }
 }

@@ -9,8 +9,8 @@ import net.dv8tion.jda.api.entities.Message;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.String.format;
 
@@ -23,8 +23,7 @@ public class Roll implements Command {
   private final ResultMapper resultMapper;
 
   @Override
-  public CompletableFuture<String> execute(Message message) {
-    final ThreadLocalRandom rand = ThreadLocalRandom.current();
+  public CompletableFuture<String> execute(Random rand, Message message) {
     final int[] rolls = base.execute(rand);
     final String username = MessageUtil.getAuthorDisplayName(message);
     State state = new State(rolls, format("%s roll: `%s`", username, Arrays.toString(rolls)));

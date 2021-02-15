@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import static java.lang.String.format;
 
 @Slf4j
@@ -31,7 +33,7 @@ public class Bot extends ListenerAdapter {
                        message.getGuild().getId(),
                        message.getChannel().getId(), command);
               log.debug("Executing command: {}", command);
-              command.execute(message)
+              command.execute(ThreadLocalRandom.current(), message)
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
