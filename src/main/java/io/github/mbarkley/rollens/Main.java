@@ -1,5 +1,6 @@
 package io.github.mbarkley.rollens;
 
+import io.github.mbarkley.rollens.format.Formatter;
 import io.github.mbarkley.rollens.parse.Parser;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -17,7 +18,7 @@ public class Main {
         // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
         // All other events will be disabled.
         JDABuilder.createLight(args[0], GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-                  .addEventListeners(new Bot(new Parser()))
+                  .addEventListeners(new Bot(new Parser(), new Formatter()))
                   .setActivity(Activity.listening("!mr"))
                   .build();
     }

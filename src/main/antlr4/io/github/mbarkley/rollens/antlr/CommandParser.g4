@@ -14,5 +14,15 @@ expression
     ;
 
 roll
-    : ROLL
+    : ROLL modifiers?
+    ;
+
+modifiers
+    : successModifiers modifiers?
+    ;
+
+successModifiers
+    : TNUM
+    | TNUM FNUM
+    | FNUM TNUM
     ;

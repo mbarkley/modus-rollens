@@ -5,6 +5,7 @@ import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
 import io.github.mbarkley.rollens.command.Command;
 import io.github.mbarkley.rollens.command.SimpleRoll;
+import io.github.mbarkley.rollens.command.SuccessCountRoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
@@ -77,10 +78,18 @@ public class Parser {
                         1 :
                         Integer.parseInt(matcher.group(1));
                 final int numberOfSides = Integer.parseInt(matcher.group(2));
-                if (log.isTraceEnabled()) {
-                    log.trace("Returning simple roll command for {}", ctx.ROLL().getText());
+                if (ctx.modifiers() == null) {
+                    return new SimpleRoll(numberOfDice, numberOfSides);
+                } else if (ctx.modifiers().successModifiers() != null) {
+                    final CommandParser.SuccessModifiersContext successCtx = ctx.modifiers().successModifiers();
+                    int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
+                    int failureThreshold = successCtx.FNUM() != null
+                            ? Integer.parseInt(successCtx.FNUM().getText().substring(1))
+                            : 0;
+                    return new SuccessCountRoll(numberOfDice, numberOfSides, successThreshold, failureThreshold);
+                } else {
+                    throw new IllegalStateException("Unknown state for context " + ctx.getText());
                 }
-                return new SimpleRoll(numberOfDice, numberOfSides);
             } else {
                 throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Input: " + ctx.getText());
             }

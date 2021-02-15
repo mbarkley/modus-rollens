@@ -5,6 +5,11 @@ WHITESPACE : (' ' | '\t')+ -> skip;
 // Keywords
 NUMBER : [0-9]+;
 
+// Dice modifiers
+TNUM : 't' NUMBER;
+
+FNUM : 'f' NUMBER;
+
 // Arithmetic symbols
 TIMES : '*';
 

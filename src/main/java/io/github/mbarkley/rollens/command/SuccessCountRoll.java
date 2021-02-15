@@ -18,9 +18,11 @@ import static java.lang.String.format;
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class SimpleRoll implements Command {
+public class SuccessCountRoll implements Command {
     private final int numberOfDice;
     private final int numberOfSides;
+    private final int successThreshold;
+    private final int failureThreshold;
 
     @Override
     public CompletableFuture<String> execute(Message message, Formatter formatter) {
@@ -28,7 +30,18 @@ public class SimpleRoll implements Command {
         int[] rawRolls = IntStream.generate(() -> rand.nextInt(1, numberOfSides + 1))
                                   .limit(numberOfDice)
                                   .toArray();
-        int sum = Arrays.stream(rawRolls).sum();
+        int sum = Arrays.stream(rawRolls)
+                        .map(n -> {
+                            if (n >= successThreshold) {
+                                return 1;
+                            } else if (n <= failureThreshold) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        })
+                        .sum();
+
         String responseText = formatter.formatResponse(message, rawRolls, sum);
 
         return CompletableFuture.completedFuture(responseText);

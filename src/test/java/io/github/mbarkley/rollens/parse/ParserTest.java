@@ -2,6 +2,7 @@ package io.github.mbarkley.rollens.parse;
 
 import io.github.mbarkley.rollens.command.Command;
 import io.github.mbarkley.rollens.command.SimpleRoll;
+import io.github.mbarkley.rollens.command.SuccessCountRoll;
 import net.dv8tion.jda.api.entities.MessageActivity;
 import net.dv8tion.jda.internal.entities.AbstractMessage;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +27,14 @@ public class ParserTest {
         Assertions.assertEquals(Optional.of(result), parsed);
     }
 
+    @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
+    @MethodSource("successCounts")
+    public void shouldParseSuccessCount(String input, SuccessCountRoll result) {
+        final TestMessage message = new TestMessage(input);
+        final Optional<Command> parsed = parser.parse(message);
+        Assertions.assertEquals(Optional.of(result), parsed);
+    }
+
     @ParameterizedTest(name = "Should not parse \"{0}\"")
     @MethodSource("badExpressions")
     public void shouldNotParseBadExpressions(String input) {
@@ -34,13 +43,22 @@ public class ParserTest {
         Assertions.assertEquals(Optional.empty(), parsed);
     }
 
-    public static Stream<Arguments> simpleRolls() {
+    private static Stream<Arguments> simpleRolls() {
         return Stream.of(
                 arguments("!mr 2d6", new SimpleRoll(2, 6)),
                 arguments("!mr 1d10", new SimpleRoll(1, 10)),
                 arguments("!mr 2D6", new SimpleRoll(2, 6)),
                 arguments("!mr d6", new SimpleRoll(1, 6)),
                 arguments("!mr D6", new SimpleRoll(1, 6))
+        );
+    }
+
+    private static Stream<Arguments> successCounts() {
+        return Stream.of(
+                arguments("!mr 2d6 t6", new SuccessCountRoll(2, 6, 6, 0)),
+                arguments("!mr 2d10 t7", new SuccessCountRoll(2, 10, 7, 0)),
+                arguments("!mr 2d10 t7 f2", new SuccessCountRoll(2, 10, 7, 2)),
+                arguments("!mr 2d10 f2 t7", new SuccessCountRoll(2, 10, 7, 2))
         );
     }
 
@@ -51,7 +69,8 @@ public class ParserTest {
                 arguments("!mr 2d 6"),
                 arguments("!mr -2d6"),
                 arguments("!mr 2d-6"),
-                arguments("! mr 2d6")
+                arguments("! mr 2d6"),
+                arguments("!mr 2d10 f1")
         );
     }
 
