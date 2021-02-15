@@ -25,6 +25,7 @@ public class Bot extends ListenerAdapter {
         parser.parse(message)
         .ifPresent(command -> {
             try {
+                log.info("Executing guild/channel/command=[{}/{}/{}]", message.getGuild().getId(), message.getChannel().getId(), command);
                 log.debug("Executing command: {}", command);
                 command.execute(message, formatter)
                        .whenComplete((responseText, ex) -> {
