@@ -3,6 +3,8 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.jda.TestMessage;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,7 +18,14 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public class ParserTest {
   Parser parser = new Parser();
 
-  @ParameterizedTest(name = "Should save \"{0}\" as {1}")
+  @Test
+  public void should_parse_list() {
+    final TestMessage message = new TestMessage("!mr list");
+    final Optional<Command> parsed = parser.parse(message);
+    Assertions.assertEquals(Optional.of(new ListSaved()), parsed);
+  }
+
+  @ParameterizedTest(name = "save \"{0}\" as {1}")
   @MethodSource("saves")
   public void should_parse_save(String input, Object result) {
     final TestMessage message = new TestMessage(input);
@@ -24,7 +33,7 @@ public class ParserTest {
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
-  @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
+  @ParameterizedTest(name = "roll \"{0}\" as {1}")
   @MethodSource("rolls")
   public void should_parse_roll(String input, Object result) {
     final TestMessage message = new TestMessage(input);
@@ -32,7 +41,7 @@ public class ParserTest {
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
-  @ParameterizedTest(name = "Should not parse \"{0}\"")
+  @ParameterizedTest(name = "bad expression \"{0}\"")
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
     final TestMessage message = new TestMessage(input);
@@ -86,7 +95,9 @@ public class ParserTest {
         arguments("!mr 2d 6"),
         arguments("!mr -2d6"),
         arguments("!mr 2d-6"),
-        arguments("! mr 2d6")
+        arguments("! mr 2d6"),
+        arguments("!mr notlist"),
+        arguments("!mr notsave (foo a b c) = 2d6")
     );
   }
 

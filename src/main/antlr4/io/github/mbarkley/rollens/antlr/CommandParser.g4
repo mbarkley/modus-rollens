@@ -13,11 +13,16 @@ command
 expression
     : roll
     | save
+    | list
     ;
 
 save
     // save (f arg1 arg2...) = <expression>
     : {getCurrentToken().getText().equals("save")}? IDENTIFIER LB IDENTIFIER (IDENTIFIER)* RB EQ roll
+    ;
+
+list
+    : {getCurrentToken().getText().equals("list")}? IDENTIFIER
     ;
 
 roll

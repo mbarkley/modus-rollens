@@ -67,8 +67,14 @@ public class Parser {
       return Objects.requireNonNull(switch (ctx.getAltNumber()) {
         case 1 -> visitRoll(ctx.roll());
         case 2 -> visitSave(ctx.save());
+        case 3 -> visitList(ctx.list());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command visitList(CommandParser.ListContext ctx) {
+      return ListSaved.INSTANCE;
     }
 
     @Override
