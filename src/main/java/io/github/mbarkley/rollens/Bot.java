@@ -1,6 +1,5 @@
 package io.github.mbarkley.rollens;
 
-import io.github.mbarkley.rollens.format.Formatter;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,15 +7,12 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.text.Normalizer;
-
 import static java.lang.String.format;
 
 @Slf4j
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
   private final Parser parser;
-  private final Formatter formatter;
 
   @Override
   public void onMessageReceived(MessageReceivedEvent event) {
@@ -29,7 +25,7 @@ public class Bot extends ListenerAdapter {
               log.info("Executing guild/channel/command=[{}/{}/{}]", message.getGuild().getId(), message.getChannel()
                                                                                                         .getId(), command);
               log.debug("Executing command: {}", command);
-              command.execute(message, formatter)
+              command.execute(message)
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());

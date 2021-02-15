@@ -4,9 +4,10 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -17,12 +18,24 @@ public class ExplodingModifier implements RollModifier {
   private final int maxIterations;
 
   @Override
-  public int[] modify(Random rand, BaseRoll baseRoll, int[] rawRolls) {
-    return Arrays.stream(rawRolls)
-                 .flatMap(roll -> IntStream
-                     .iterate(roll, r -> r >= explodingThreshold, r -> rand
-                         .nextInt(baseRoll.getNumberOfSides()) + 1)
-                     .limit(Math.min(maxIterations, MAX_ITERATION_CAP)))
-                 .toArray();
+  public State modify(Random rand, BaseRoll baseRoll, State state) {
+    final int[] rolls = state.getRolls();
+    List<Integer> newRolls = new ArrayList<>();
+    int iterationCap = Math.min(maxIterations, MAX_ITERATION_CAP);
+    for (int roll : rolls) {
+      int iterations = 0;
+      while (roll >= explodingThreshold && iterations < iterationCap) {
+        iterations++;
+        roll = rand.nextInt(baseRoll.getNumberOfSides()) + 1;
+        newRolls.add(roll);
+      }
+    }
+
+    final int[] allRolls = Arrays.copyOf(rolls, rolls.length + newRolls.size());
+    for (int i = 0; i < newRolls.size(); i++) {
+      allRolls[rolls.length + i] = newRolls.get(i);
+    }
+
+    return new State(allRolls, state.getLog() + " `" + newRolls + "`");
   }
 }
