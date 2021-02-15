@@ -9,6 +9,7 @@ import org.jdbi.v3.core.Handle;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -29,7 +30,8 @@ public class Save implements Command {
         SavedRoll savedRoll = new SavedRoll(guildId, identifier, parameters, rhs);
         handle.attach(SavedRollsDao.class).insert(savedRoll);
 
-        return format("Saved (%s)", Stream.concat(Stream.of(identifier), parameters.stream()));
+        return format("Saved (%s)", Stream.concat(Stream.of(identifier), parameters.stream())
+                                          .collect(Collectors.joining(" ")));
       }
     }, context.getExecutorService());
   }
