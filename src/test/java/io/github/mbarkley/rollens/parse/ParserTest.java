@@ -97,7 +97,8 @@ public class ParserTest {
         arguments("!mr 2d-6"),
         arguments("! mr 2d6"),
         arguments("!mr notlist"),
-        arguments("!mr notsave (foo a b c) = 2d6")
+        arguments("!mr notsave (foo a b c) = 2d6"),
+        arguments("!mr {n}d6")
     );
   }
 

@@ -105,8 +105,7 @@ public class Parser {
         final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
         return new Roll(base, modifiers.rollModifiers, modifiers.resultMapper);
       } else {
-        throw new IllegalStateException("Shouldn't be possible to parse roll that doesn't match regular expression. Input: " + ctx
-            .getText());
+        throw new ParseCancellationException();
       }
     }
   }
