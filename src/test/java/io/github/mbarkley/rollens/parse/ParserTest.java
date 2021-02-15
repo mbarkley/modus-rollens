@@ -1,8 +1,6 @@
 package io.github.mbarkley.rollens.parse;
 
-import io.github.mbarkley.rollens.command.Command;
-import io.github.mbarkley.rollens.command.SimpleRoll;
-import io.github.mbarkley.rollens.command.SuccessCountRoll;
+import io.github.mbarkley.rollens.eval.*;
 import net.dv8tion.jda.api.entities.MessageActivity;
 import net.dv8tion.jda.internal.entities.AbstractMessage;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -21,7 +20,7 @@ public class ParserTest {
 
     @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
     @MethodSource("simpleRolls")
-    public void shouldParseSimpleRoll(String input, SimpleRoll result) {
+    public void shouldParseSimpleRoll(String input, Object result) {
         final TestMessage message = new TestMessage(input);
         final Optional<Command> parsed = parser.parse(message);
         Assertions.assertEquals(Optional.of(result), parsed);
@@ -29,7 +28,7 @@ public class ParserTest {
 
     @ParameterizedTest(name = "Should parse \"{0}\" as {1}")
     @MethodSource("successCounts")
-    public void shouldParseSuccessCount(String input, SuccessCountRoll result) {
+    public void shouldParseSuccessCount(String input, Object result) {
         final TestMessage message = new TestMessage(input);
         final Optional<Command> parsed = parser.parse(message);
         Assertions.assertEquals(Optional.of(result), parsed);
@@ -45,20 +44,20 @@ public class ParserTest {
 
     private static Stream<Arguments> simpleRolls() {
         return Stream.of(
-                arguments("!mr 2d6", new SimpleRoll(2, 6)),
-                arguments("!mr 1d10", new SimpleRoll(1, 10)),
-                arguments("!mr 2D6", new SimpleRoll(2, 6)),
-                arguments("!mr d6", new SimpleRoll(1, 6)),
-                arguments("!mr D6", new SimpleRoll(1, 6))
+                arguments("!mr 2d6", new Roll(new SimpleRoll(2, 6), List.of(), new SumMapper())),
+                arguments("!mr 1d10", new Roll(new SimpleRoll(1, 10), List.of(), new SumMapper())),
+                arguments("!mr 2D6", new Roll(new SimpleRoll(2, 6), List.of(), new SumMapper())),
+                arguments("!mr d6", new Roll(new SimpleRoll(1, 6), List.of(), new SumMapper())),
+                arguments("!mr D6", new Roll(new SimpleRoll(1, 6), List.of(), new SumMapper()))
         );
     }
 
     private static Stream<Arguments> successCounts() {
         return Stream.of(
-                arguments("!mr 2d6 t6", new SuccessCountRoll(2, 6, 6, 0)),
-                arguments("!mr 2d10 t7", new SuccessCountRoll(2, 10, 7, 0)),
-                arguments("!mr 2d10 t7 f2", new SuccessCountRoll(2, 10, 7, 2)),
-                arguments("!mr 2d10 f2 t7", new SuccessCountRoll(2, 10, 7, 2))
+                arguments("!mr 2d6 t6", new Roll(new SimpleRoll(2, 6), List.of(), new SuccessCountRoll(6, 0))),
+                arguments("!mr 2d10 t7", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 0))),
+                arguments("!mr 2d10 t7 f2", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 2))),
+                arguments("!mr 2d10 f2 t7", new Roll(new SimpleRoll(2, 10), List.of(), new SuccessCountRoll(7, 2)))
         );
     }
 

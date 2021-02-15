@@ -3,9 +3,7 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.antlr.CommandLexer;
 import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
-import io.github.mbarkley.rollens.command.Command;
-import io.github.mbarkley.rollens.command.SimpleRoll;
-import io.github.mbarkley.rollens.command.SuccessCountRoll;
+import io.github.mbarkley.rollens.eval.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
@@ -14,6 +12,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -79,14 +78,14 @@ public class Parser {
                         Integer.parseInt(matcher.group(1));
                 final int numberOfSides = Integer.parseInt(matcher.group(2));
                 if (ctx.modifiers() == null) {
-                    return new SimpleRoll(numberOfDice, numberOfSides);
+                    return new Roll(new SimpleRoll(numberOfDice, numberOfSides), List.of(), new SumMapper());
                 } else if (ctx.modifiers().successModifiers() != null) {
                     final CommandParser.SuccessModifiersContext successCtx = ctx.modifiers().successModifiers();
                     int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
                     int failureThreshold = successCtx.FNUM() != null
                             ? Integer.parseInt(successCtx.FNUM().getText().substring(1))
                             : 0;
-                    return new SuccessCountRoll(numberOfDice, numberOfSides, successThreshold, failureThreshold);
+                    return new Roll(new SimpleRoll(numberOfDice, numberOfSides), List.of(), new SuccessCountRoll(successThreshold, failureThreshold));
                 } else {
                     throw new IllegalStateException("Unknown state for context " + ctx.getText());
                 }

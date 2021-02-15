@@ -1,4 +1,4 @@
-package io.github.mbarkley.rollens.command;
+package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.format.Formatter;
 import net.dv8tion.jda.api.entities.Message;
