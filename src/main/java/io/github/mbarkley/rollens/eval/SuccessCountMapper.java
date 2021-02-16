@@ -25,6 +25,6 @@ public class SuccessCountMapper implements ResultMapper {
       if (roll <= failureThreshold) failures++;
     }
 
-    return format("%d=%d-%d", successes - failures, successes, failures);
+    return format("%d", successes - failures);
   }
 }

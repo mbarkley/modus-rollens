@@ -33,18 +33,21 @@ public class Invoke implements Command {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();
-        final SavedRoll savedRoll = handle.attach(SavedRollsDao.class)
+        return handle.attach(SavedRollsDao.class)
                                           .find(guildId, identifier, (byte) arguments.length);
 
-        final String expressionWithArgs = getSubstitutedExpression(savedRoll);
-
-        final Optional<Roll> parsed = context.getParser().parseRoll(expressionWithArgs);
-        return parsed
-            .orElseThrow(() -> new InvalidExpressionException(
-                format("Expression invalid after argument substitution: `%s`",
-                       expressionWithArgs)));
       }
-    }, context.getExecutorService()).thenCompose(command -> command.execute(context));
+    }, context.getExecutorService()).thenCompose(savedRoll -> {
+      final String expressionWithArgs = getSubstitutedExpression(savedRoll);
+
+      final Optional<Roll> parsed = context.getParser().parseRoll(expressionWithArgs);
+      Roll roll = parsed
+          .orElseThrow(() -> new InvalidExpressionException(
+              format("Expression invalid after argument substitution: `%s`",
+                     expressionWithArgs)));
+      return roll.execute(context)
+                 .thenApply(result -> format("Evaluating: `%s`\n%s", expressionWithArgs, result));
+    });
   }
 
   private String getSubstitutedExpression(SavedRoll savedRoll) {

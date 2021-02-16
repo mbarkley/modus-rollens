@@ -140,6 +140,7 @@ public class EvalTest {
             new Save("foo", List.of(), "2d6"),
             new Invoke("foo", new int[0]),
             """
+                Evaluating: `2d6`
                 Test User roll: `[2, 1]`
                 Result: 3"""
         ),
@@ -148,6 +149,7 @@ public class EvalTest {
             new Save("foo", List.of("n", "m"), "{n}d{m}"),
             new Invoke("foo", new int[] {5, 10}),
             """
+                Evaluating: `5d10`
                 Test User roll: `[2, 5, 10, 3, 10]`
                 Result: 30"""
         ),
@@ -156,6 +158,7 @@ public class EvalTest {
             new Save("foo", List.of("n"), "{n}d{n}"),
             new Invoke("foo", new int[] {10}),
             """
+                Evaluating: `10d10`
                 Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]`
                 Result: 64"""
         ),
@@ -164,8 +167,9 @@ public class EvalTest {
             new Save("foo", List.of("n", "m", "t"), "{n}d{m} t{t} f1"),
             new Invoke("foo", new int[] {5, 10, 6}),
             """
+                Evaluating: `5d10 t6 f1`
                 Test User roll: `[2, 5, 10, 3, 10]`
-                Result: 2=2-0"""
+                Result: 2"""
         )
     );
   }
@@ -192,7 +196,7 @@ public class EvalTest {
                   ),
                   """
                       Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]`
-                      Result: 4=5-1"""
+                      Result: 4"""
         ),
         // exploding sums
         arguments(new Random(1337),
@@ -229,7 +233,7 @@ public class EvalTest {
                   ),
                   """
                       Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]` `[7, 4, 9, 1, 4, 1, 1]`
-                      Result: 4=7-3"""
+                      Result: 4"""
         )
     );
   }
