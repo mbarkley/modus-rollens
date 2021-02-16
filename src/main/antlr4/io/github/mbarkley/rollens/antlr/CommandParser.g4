@@ -14,8 +14,9 @@ expression
     : roll
     | save
     | list
-    | invocation
     | delete
+    | help
+    | invocation
     ;
 
 delete
@@ -30,6 +31,10 @@ invocation
 save
     // save (f arg1 arg2...) = <expression>
     : {getCurrentToken().getText().equals("save")}? IDENTIFIER LB IDENTIFIER (IDENTIFIER)* RB EQ roll
+    ;
+
+help
+    : {getCurrentToken().getText().equals("help")}? IDENTIFIER
     ;
 
 list

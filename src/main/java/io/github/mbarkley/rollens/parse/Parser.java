@@ -87,10 +87,16 @@ public class Parser {
         case 1 -> visitRoll(ctx.roll());
         case 2 -> visitSave(ctx.save());
         case 3 -> visitList(ctx.list());
-        case 4 -> visitInvocation(ctx.invocation());
-        case 5 -> visitDelete(ctx.delete());
+        case 4 -> visitDelete(ctx.delete());
+        case 5 -> visitHelp(ctx.help());
+        case 6 -> visitInvocation(ctx.invocation());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command visitHelp(CommandParser.HelpContext ctx) {
+      return Help.INSTANCE;
     }
 
     @Override

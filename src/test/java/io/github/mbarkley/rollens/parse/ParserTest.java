@@ -26,10 +26,17 @@ public class ParserTest {
   }
 
   @Test
+  public void should_parse_help() {
+    final TestMessage message = new TestMessage("!mr help");
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    Assertions.assertEquals(Optional.of(Help.INSTANCE), parsed);
+  }
+
+  @Test
   public void should_parse_list() {
     final TestMessage message = new TestMessage("!mr list");
     final Optional<Command> parsed = parser.parse(message.getContentRaw());
-    Assertions.assertEquals(Optional.of(new ListSaved()), parsed);
+    Assertions.assertEquals(Optional.of(ListSaved.INSTANCE), parsed);
   }
 
   @ParameterizedTest(name = "delete \"{0}\" as {1}")
