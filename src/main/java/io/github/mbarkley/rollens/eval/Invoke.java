@@ -9,8 +9,6 @@ import org.jdbi.v3.core.Handle;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -34,7 +32,8 @@ public class Invoke implements Command {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();
         return handle.attach(SavedRollsDao.class)
-                                          .find(guildId, identifier, (byte) arguments.length);
+                     .find(guildId, identifier, (byte) arguments.length)
+                     .orElseThrow(() -> new InvalidExpressionException(format("No saved roll found for `%s %d`", identifier, arguments.length)));
 
       }
     }, context.getExecutorService()).thenCompose(savedRoll -> {

@@ -15,6 +15,12 @@ expression
     | save
     | list
     | invocation
+    | delete
+    ;
+
+delete
+    // delete name <arity>
+    : {getCurrentToken().getText().equals("delete")}? IDENTIFIER IDENTIFIER NUMBER
     ;
 
 invocation

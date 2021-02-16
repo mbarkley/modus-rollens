@@ -49,6 +49,49 @@ public class EvalTest {
   }
 
   @Test
+  public void deleting_after_save_removes_from_list() throws InterruptedException, ExecutionException, TimeoutException {
+    final List<Save> saves = List.of(
+        new Save("foo",
+                 List.of(),
+                 "2d6"),
+        new Save("foo",
+                 List.of("a"),
+                 "{a}d6"),
+        new Save("foo",
+                 List.of("a", "b", "c"),
+                 "{a}d{b} t{c}")
+    );
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+
+    // do saves
+    final CompletableFuture[] futures = saves.stream()
+                                             .map(save -> save.execute(context))
+                                             .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
+
+    // validate list
+    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals("""
+                                __Saved Rolls__
+                                `(foo) = 2d6`
+                                `(foo a) = {a}d6`
+                                `(foo a b c) = {a}d{b} t{c}`""",
+                            loaded);
+
+    // do delete
+    final String deleted = new Delete("foo", 1).execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals("Deleted `(foo a) = {a}d6`", deleted);
+
+    // validate list
+    final String newList = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals("""
+                                __Saved Rolls__
+                                `(foo) = 2d6`
+                                `(foo a b c) = {a}d{b} t{c}`""",
+                            newList);
+  }
+
+  @Test
   public void save_and_list_should_show_all_saved() throws InterruptedException, ExecutionException, TimeoutException {
     final List<Save> saves = List.of(
         new Save("foo0",
@@ -61,7 +104,6 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    testMessage.setGuild(new TestGuild(123));
     Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
     final CompletableFuture[] futures = saves.stream()
                                              .map(save -> save.execute(context))

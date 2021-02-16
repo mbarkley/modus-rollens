@@ -88,8 +88,14 @@ public class Parser {
         case 2 -> visitSave(ctx.save());
         case 3 -> visitList(ctx.list());
         case 4 -> visitInvocation(ctx.invocation());
+        case 5 -> visitDelete(ctx.delete());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command visitDelete(CommandParser.DeleteContext ctx) {
+      return new Delete(ctx.IDENTIFIER(1).getText(), Integer.parseInt(ctx.NUMBER().getText()));
     }
 
     @Override

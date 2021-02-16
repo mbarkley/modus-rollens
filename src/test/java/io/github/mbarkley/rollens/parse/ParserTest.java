@@ -32,6 +32,14 @@ public class ParserTest {
     Assertions.assertEquals(Optional.of(new ListSaved()), parsed);
   }
 
+  @ParameterizedTest(name = "delete \"{0}\" as {1}")
+  @MethodSource("deletes")
+  public void should_parse_delete(String input, Object result) {
+    final TestMessage message = new TestMessage(input);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    Assertions.assertEquals(Optional.of(result), parsed);
+  }
+
   @ParameterizedTest(name = "save \"{0}\" as {1}")
   @MethodSource("saves")
   public void should_parse_save(String input, Object result) {
@@ -60,6 +68,12 @@ public class ParserTest {
     return Stream.of(
         arguments("!mr foo", new Invoke("foo", new int[0])),
         arguments("!mr foo 1337 13", new Invoke("foo", new int[] {1337, 13}))
+    );
+  }
+
+  private static Stream<Arguments> deletes() {
+    return Stream.of(
+        arguments("!mr delete foo 3", new Delete("foo", 3))
     );
   }
 
