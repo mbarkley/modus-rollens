@@ -1,6 +1,6 @@
 lexer grammar CommandLexer;
 
-WHITESPACE : (' ' | '\t')+ -> skip;
+WHITESPACE : (' ' | '\t')+ -> channel(HIDDEN);
 
 NUMBER : [0-9]+;
 

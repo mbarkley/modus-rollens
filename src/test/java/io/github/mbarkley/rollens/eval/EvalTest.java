@@ -114,7 +114,7 @@ public class EvalTest {
   }
 
   @MethodSource("invocations")
-  @ParameterizedTest(name = "invoking \"{0}\" should have result \"{1}\"")
+  @ParameterizedTest(name = "invoking \"{2}\" should have result \"{3}\"")
   public void should_invoke_saved_roll(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
     final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage);
     // setup
@@ -158,6 +158,14 @@ public class EvalTest {
             """
                 Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]`
                 Result: 64"""
+        ),
+        arguments(
+            new Random(1337),
+            new Save("foo", List.of("n", "m", "t"), "{n}d{m} t{t} f1"),
+            new Invoke("foo", new int[] {5, 10, 6}),
+            """
+                Test User roll: `[2, 5, 10, 3, 10]`
+                Result: 2=2-0"""
         )
     );
   }

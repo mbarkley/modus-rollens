@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,7 @@ public class Parser {
 
     try {
       final CommandParser.CommandContext commandContext = parser.command();
-      final CommandParserVisitor visitor = new CommandParserVisitor();
+      final CommandParserVisitor visitor = new CommandParserVisitor(parser.getTokenStream());
 
       if (commandContext.START() != null && commandContext.START().getText().equals("!mr")) {
         if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", input);
@@ -51,7 +52,7 @@ public class Parser {
     final CommandParser parser = initAntlrParser(input);
 
     final CommandParser.RollContext rollContext = parser.roll();
-    final CommandParserVisitor visitor = new CommandParserVisitor();
+    final CommandParserVisitor visitor = new CommandParserVisitor(parser.getTokenStream());
 
     try {
       return Optional.ofNullable(visitor.visitRoll(rollContext));
@@ -73,6 +74,7 @@ public class Parser {
 
   @RequiredArgsConstructor
   private static class CommandParserVisitor extends CommandParserBaseVisitor<Command> {
+    private final TokenStream tokenStream;
 
     @Override
     public Command visitCommand(CommandParser.CommandContext ctx) {
@@ -113,7 +115,7 @@ public class Parser {
                                      .stream()
                                      .map(TerminalNode::getText)
                                      .collect(Collectors.toList());
-      final String rhs = ctx.roll().getText();
+      final String rhs = tokenStream.getText(ctx.roll());
 
       return new Save(identifier, params, rhs);
     }
