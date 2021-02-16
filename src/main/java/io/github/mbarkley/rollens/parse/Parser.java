@@ -7,12 +7,12 @@ import io.github.mbarkley.rollens.eval.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.entities.Message;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,32 +26,49 @@ import java.util.stream.Collectors;
 public class Parser {
   private static final Pattern ROLL = Pattern.compile("(\\d+)?[dD](\\d+)");
 
-  public Optional<Command> parse(Message message) {
-    final CommandLexer lexer = new CommandLexer(CharStreams.fromString(message.getContentRaw()));
-    lexer.removeErrorListeners();
-    final CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    final CommandParser parser = new CommandParser(tokenStream);
-    parser.removeErrorListeners();
-    parser.setErrorHandler(new BailErrorStrategy());
+  public Optional<Command> parse(String input) {
+    final CommandParser parser = initAntlrParser(input);
 
     try {
       final CommandParser.CommandContext commandContext = parser.command();
       final CommandParserVisitor visitor = new CommandParserVisitor();
 
       if (commandContext.START() != null && commandContext.START().getText().equals("!mr")) {
-        if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", message.getContentRaw());
+        if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", input);
         final Command result = visitor.visit(commandContext);
         if (log.isTraceEnabled()) log.trace("Visited command with result: {}", result);
 
         return Optional.ofNullable(result);
       } else {
-        log.debug("Non-matching start, skipping command for message.id={}", message.getId());
         return Optional.empty();
       }
     } catch (ParseCancellationException ex) {
-      log.debug("Non-matching command for message.id={}, skipping", message.getId());
       return Optional.empty();
     }
+  }
+
+  public Optional<Roll> parseRoll(String input) {
+    final CommandParser parser = initAntlrParser(input);
+
+    final CommandParser.RollContext rollContext = parser.roll();
+    final CommandParserVisitor visitor = new CommandParserVisitor();
+
+    try {
+      return Optional.ofNullable(visitor.visitRoll(rollContext));
+    } catch (ParseCancellationException ex) {
+      return Optional.empty();
+    }
+  }
+
+  @NotNull
+  private CommandParser initAntlrParser(String input) {
+    final CommandLexer lexer = new CommandLexer(CharStreams.fromString(input));
+    lexer.removeErrorListeners();
+    final CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    final CommandParser parser = new CommandParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.setErrorHandler(new BailErrorStrategy());
+    return parser;
   }
 
   @RequiredArgsConstructor
@@ -68,8 +85,19 @@ public class Parser {
         case 1 -> visitRoll(ctx.roll());
         case 2 -> visitSave(ctx.save());
         case 3 -> visitList(ctx.list());
+        case 4 -> visitInvocation(ctx.invocation());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command visitInvocation(CommandParser.InvocationContext ctx) {
+      final int[] arguments = ctx.NUMBER()
+                                 .stream()
+                                 .map(TerminalNode::getText)
+                                 .mapToInt(Integer::parseInt)
+                                 .toArray();
+      return new Invoke(ctx.IDENTIFIER().getText(), arguments);
     }
 
     @Override
@@ -91,7 +119,7 @@ public class Parser {
     }
 
     @Override
-    public Command visitRoll(CommandParser.RollContext ctx) {
+    public Roll visitRoll(CommandParser.RollContext ctx) {
       if (log.isTraceEnabled()) {
         log.trace("Visiting roll context: {}", ctx.getText());
       }

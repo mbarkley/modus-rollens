@@ -4,6 +4,7 @@ import io.github.mbarkley.rollens.db.DbUtil;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
 import io.github.mbarkley.rollens.jda.TestMessage;
+import io.github.mbarkley.rollens.parse.Parser;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,6 +25,7 @@ public class EvalTest {
   TestMessage testMessage;
   Jdbi jdbi;
   ExecutorService executorService;
+  Parser parser;
 
   @BeforeEach
   public void setup() throws IOException {
@@ -31,11 +33,14 @@ public class EvalTest {
     final TestMember member = new TestMember();
     member.setNickname("Test User");
     testMessage.setMember(member);
+    testMessage.setGuild(new TestGuild(123));
 
     final File dbFile = File.createTempFile("modus-rollens-", ".db");
     dbFile.deleteOnExit();
     jdbi = DbUtil.initDb(dbFile.getAbsolutePath());
     executorService = Executors.newFixedThreadPool(10);
+
+    parser = new Parser();
   }
 
   @AfterEach
@@ -57,7 +62,7 @@ public class EvalTest {
                  "{a}d{b} t{c}")
     );
     testMessage.setGuild(new TestGuild(123));
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
     final CompletableFuture[] futures = saves.stream()
                                              .map(save -> save.execute(context))
                                              .toArray(CompletableFuture[]::new);
@@ -81,8 +86,7 @@ public class EvalTest {
     final Save secondSave = new Save("foo1",
                              List.of("a"),
                              "{a}d10");
-    testMessage.setGuild(new TestGuild(123));
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
     firstSave.execute(context)
              .thenCompose(output -> secondSave.execute(context))
              .get(5, TimeUnit.SECONDS);
@@ -100,7 +104,7 @@ public class EvalTest {
     // Setup
     save_and_list_should_show_all_saved();
     testMessage.setGuild(new TestGuild(321));
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
     final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
@@ -109,13 +113,53 @@ public class EvalTest {
                             loaded);
   }
 
+  @MethodSource("invocations")
+  @ParameterizedTest(name = "invoking \"{0}\" should have result \"{1}\"")
+  public void should_invoke_saved_roll(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage);
+    // setup
+    save.execute(context).get(1, TimeUnit.SECONDS);
+    // test
+    final String invoked = invoke.execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals(result, invoked);
+  }
+
   @MethodSource("correctResults")
-  @ParameterizedTest(name = "Roll \"{1}\" should have result \"{2}\"")
+  @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
   public void roll_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
-    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, rand, testMessage));
+    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
     Assertions.assertEquals(result, observed);
+  }
+
+  private Stream<Arguments> invocations() {
+    return Stream.of(
+        arguments(
+            new Random(1337),
+            new Save("foo", List.of(), "2d6"),
+            new Invoke("foo", new int[0]),
+            """
+                Test User roll: `[2, 1]`
+                Result: 3"""
+        ),
+        arguments(
+            new Random(1337),
+            new Save("foo", List.of("n", "m"), "{n}d{m}"),
+            new Invoke("foo", new int[] {5, 10}),
+            """
+                Test User roll: `[2, 5, 10, 3, 10]`
+                Result: 30"""
+        ),
+        arguments(
+            new Random(1337),
+            new Save("foo", List.of("n"), "{n}d{n}"),
+            new Invoke("foo", new int[] {10}),
+            """
+                Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]`
+                Result: 64"""
+        )
+    );
   }
 
   private static Stream<Arguments> correctResults() {

@@ -29,14 +29,14 @@ public class Bot extends ListenerAdapter {
                 message.getGuild().getName(),
                 message.getChannel().getName());
     }
-    parser.parse(message)
+    parser.parse(message.getContentRaw())
           .ifPresent(command -> {
             try {
               log.info("Executing guild/channel/command=[{}/{}/{}]",
                        message.getGuild().getId(),
                        message.getChannel().getId(), command);
               log.debug("Executing command: {}", command);
-              command.execute(new Command.ExecutionContext(executorService, jdbi, ThreadLocalRandom.current(), message))
+              command.execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom.current(), message))
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());

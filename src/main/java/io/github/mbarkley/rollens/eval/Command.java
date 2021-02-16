@@ -1,5 +1,6 @@
 package io.github.mbarkley.rollens.eval;
 
+import io.github.mbarkley.rollens.parse.Parser;
 import lombok.Value;
 import net.dv8tion.jda.api.entities.Message;
 import org.jdbi.v3.core.Jdbi;
@@ -20,6 +21,7 @@ public interface Command {
   class ExecutionContext {
     ExecutorService executorService;
     Jdbi jdbi;
+    Parser parser;
     Random rand;
     Message message;
   }

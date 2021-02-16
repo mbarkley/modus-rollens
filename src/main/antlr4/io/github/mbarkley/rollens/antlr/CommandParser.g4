@@ -14,6 +14,11 @@ expression
     : roll
     | save
     | list
+    | invocation
+    ;
+
+invocation
+    : IDENTIFIER (NUMBER)*
     ;
 
 save

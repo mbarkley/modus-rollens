@@ -4,7 +4,6 @@ import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.jda.TestMessage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -18,10 +17,18 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public class ParserTest {
   Parser parser = new Parser();
 
+  @ParameterizedTest(name = "call \"{0}\" as {1}")
+  @MethodSource("calls")
+  public void should_saved_rolls(String input, Object result) {
+    final TestMessage message = new TestMessage(input);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    Assertions.assertEquals(Optional.of(result), parsed);
+  }
+
   @Test
   public void should_parse_list() {
     final TestMessage message = new TestMessage("!mr list");
-    final Optional<Command> parsed = parser.parse(message);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
     Assertions.assertEquals(Optional.of(new ListSaved()), parsed);
   }
 
@@ -29,7 +36,7 @@ public class ParserTest {
   @MethodSource("saves")
   public void should_parse_save(String input, Object result) {
     final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
@@ -37,7 +44,7 @@ public class ParserTest {
   @MethodSource("rolls")
   public void should_parse_roll(String input, Object result) {
     final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
@@ -45,8 +52,15 @@ public class ParserTest {
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
     final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message);
+    final Optional<Command> parsed = parser.parse(message.getContentRaw());
     Assertions.assertEquals(Optional.empty(), parsed);
+  }
+
+  private static Stream<Arguments> calls() {
+    return Stream.of(
+        arguments("!mr foo", new Invoke("foo", new int[0])),
+        arguments("!mr foo 1337 13", new Invoke("foo", new int[] {1337, 13}))
+    );
   }
 
   private static Stream<Arguments> saves() {
@@ -96,7 +110,6 @@ public class ParserTest {
         arguments("!mr -2d6"),
         arguments("!mr 2d-6"),
         arguments("! mr 2d6"),
-        arguments("!mr notlist"),
         arguments("!mr notsave (foo a b c) = 2d6"),
         arguments("!mr {n}d6")
     );
