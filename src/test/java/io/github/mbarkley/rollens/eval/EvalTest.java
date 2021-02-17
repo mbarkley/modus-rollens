@@ -49,7 +49,7 @@ public class EvalTest {
   }
 
   @Test
-  public void deleting_after_save_removes_from_list() throws InterruptedException, ExecutionException, TimeoutException {
+  public void deleting_after_save_in_guild_removes_from_list() throws InterruptedException, ExecutionException, TimeoutException {
     final List<Save> saves = List.of(
         new Save("foo",
                  List.of(),
@@ -92,7 +92,7 @@ public class EvalTest {
   }
 
   @Test
-  public void save_and_list_should_show_all_saved() throws InterruptedException, ExecutionException, TimeoutException {
+  public void save_and_list_in_guild_should_show_all_saved() throws InterruptedException, ExecutionException, TimeoutException {
     final List<Save> saves = List.of(
         new Save("foo0",
                  List.of(),
@@ -121,7 +121,7 @@ public class EvalTest {
   }
 
   @Test
-  public void saving_should_overwrite() throws InterruptedException, ExecutionException, TimeoutException {
+  public void saving_in_guild_should_overwrite() throws InterruptedException, ExecutionException, TimeoutException {
     final Save firstSave = new Save("foo1",
                              List.of("a"),
                              "{a}d6");
@@ -144,7 +144,7 @@ public class EvalTest {
   @Test
   public void list_should_show_only_saved_from_relevant_guild() throws InterruptedException, ExecutionException, TimeoutException {
     // Setup
-    save_and_list_should_show_all_saved();
+    save_and_list_in_guild_should_show_all_saved();
     testMessage.setGuild(new TestGuild(321));
     Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
     final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
@@ -155,9 +155,18 @@ public class EvalTest {
                             loaded);
   }
 
+  @MethodSource("guildOnlyCommands")
+  @ParameterizedTest(name = "invoking \"{0}\" should have failure message \"{1}\"")
+  public void should_invoke_saved_roll_in_guild(Command command, String result) throws InterruptedException, ExecutionException, TimeoutException {
+    testMessage.setGuild(null);
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    final String observed = command.execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals(result, observed);
+  }
+
   @MethodSource("invocations")
   @ParameterizedTest(name = "invoking \"{2}\" should have result \"{3}\"")
-  public void should_invoke_saved_roll(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
+  public void should_invoke_saved_roll_in_guild(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
     final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage);
     // setup
     save.execute(context).get(1, TimeUnit.SECONDS);
@@ -168,7 +177,17 @@ public class EvalTest {
 
   @MethodSource("correctResults")
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
-  public void roll_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
+  public void roll_in_direct_message_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
+    testMessage.setGuild(null);
+    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
+    Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
+    final String observed = executed.get();
+    Assertions.assertEquals(result, observed);
+  }
+
+  @MethodSource("correctResults")
+  @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
+  public void roll_in_guild_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
     final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
@@ -277,6 +296,15 @@ public class EvalTest {
                       Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]` `[7, 4, 9, 1, 4, 1, 1]`
                       Result: 4"""
         )
+    );
+  }
+
+  private static Stream<Arguments> guildOnlyCommands() {
+    return Stream.of(
+        arguments(new Save("foo", List.of(), "2d6"), "Cannot save rolls in direct messages"),
+        arguments(new ListSaved(), "Cannot save and list rolls in direct messages"),
+        arguments(new Delete("foo", 0), "Cannot delete rolls in direct messages"),
+        arguments(new Invoke("foo", new int[0]), "Cannot invoke saved rolls from direct messages")
     );
   }
 }

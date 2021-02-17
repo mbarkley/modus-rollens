@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.security.auth.login.LoginException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 

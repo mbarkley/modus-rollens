@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.jdbi.v3.core.Handle;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
@@ -18,6 +19,15 @@ public class ListSaved implements Command {
   public static ListSaved INSTANCE = new ListSaved();
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
+    if (context.getMessage().isFromGuild()) {
+      return doList(context);
+    } else {
+      return CompletableFuture.completedFuture("Cannot save and list rolls in direct messages");
+    }
+  }
+
+  @NotNull
+  private CompletableFuture<String> doList(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();

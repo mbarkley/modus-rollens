@@ -28,6 +28,14 @@ public class Invoke implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
+    if (context.getMessage().isFromGuild()) {
+      return doInvoke(context);
+    } else {
+      return CompletableFuture.completedFuture("Cannot invoke saved rolls from direct messages");
+    }
+  }
+
+  private CompletableFuture<String> doInvoke(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();

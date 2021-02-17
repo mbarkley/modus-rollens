@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.jdbi.v3.core.Handle;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +24,15 @@ public class Delete implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
+    if (context.getMessage().isFromGuild()) {
+      return doDelete(context);
+    } else {
+      return CompletableFuture.completedFuture("Cannot delete rolls in direct messages");
+    }
+  }
+
+  @NotNull
+  private CompletableFuture<String> doDelete(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
         long guildId = context.getMessage().getGuild().getIdLong();

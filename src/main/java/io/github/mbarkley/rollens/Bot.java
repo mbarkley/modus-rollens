@@ -25,17 +25,24 @@ public class Bot extends ListenerAdapter {
   public void onMessageReceived(MessageReceivedEvent event) {
     Message message = event.getMessage();
     if (log.isDebugEnabled()) {
-      log.debug("Parsing message from guild/channel=[{}/{}]",
-                message.getGuild().getName(),
-                message.getChannel().getName());
+      if (message.isFromGuild()) {
+        log.debug("Parsing message from guild/channel=[{}/{}]",
+                  message.getGuild().getName(),
+                  message.getChannel().getName());
+      } else {
+        log.debug("Parsing DM from user=[{}]", message.getAuthor().getId());
+      }
     }
     parser.parse(message.getContentRaw())
           .ifPresent(command -> {
             try {
-              log.info("Executing guild/channel/command=[{}/{}/{}]",
-                       message.getGuild().getId(),
-                       message.getChannel().getId(), command);
-              log.debug("Executing command: {}", command);
+              if (message.isFromGuild()) {
+                log.info("Executing guild/channel/command=[{}/{}/{}]",
+                         message.getGuild().getId(),
+                         message.getChannel().getId(), command);
+              } else {
+                log.info("Executing user/command=[{}/{}]", message.getAuthor().getId(), command);
+              }
               command.execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom.current(), message))
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
