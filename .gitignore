@@ -1,3 +1,4 @@
 target/
 gen/
 app.db
+dependency-reduced-pom.xml
