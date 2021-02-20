@@ -35,8 +35,7 @@ public class Help implements Command {
           `!mr delete werewolf 2`: Delete the saved roll called `werewolf` that has two inputs.
           
           __Show This Help Message__
-          `!mr help`
-          """;
+          `!mr help`""";
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
