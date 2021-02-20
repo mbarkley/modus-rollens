@@ -47,7 +47,7 @@ EQ : '=';
 // Dice pool symbols
 fragment D : ('d' | 'D');
 
-ROLL : VALUE? D VALUE;
+DICE : VALUE? D VALUE;
 
 VALUE : (NUMBER | '{' IDENTIFIER '}');
 

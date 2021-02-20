@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -18,24 +19,25 @@ public class ExplodingModifier implements RollModifier {
   private final int maxIterations;
 
   @Override
-  public State modify(Random rand, BaseRoll baseRoll, State state) {
-    final int[] rolls = state.getRolls();
-    List<Integer> newRolls = new ArrayList<>();
+  public State modify(Random rand, DicePool dicePool, State state) {
+    final Roll[] rolls = state.getRolls();
+    List<Roll> allRolls = new ArrayList<>(Arrays.asList(rolls));
+
     int iterationCap = Math.min(maxIterations, MAX_ITERATION_CAP);
-    for (int roll : rolls) {
+    for (var roll : rolls) {
       int iterations = 0;
-      while (roll >= explodingThreshold && iterations < iterationCap) {
+      while (roll.getValue() >= explodingThreshold && iterations < iterationCap) {
         iterations++;
-        roll = rand.nextInt(baseRoll.getNumberOfSides()) + 1;
-        newRolls.add(roll);
+        roll = new Roll(roll.getNumDiceSides(), rand.nextInt(roll.getNumDiceSides()) + 1);
+        allRolls.add(roll);
       }
     }
 
-    final int[] allRolls = Arrays.copyOf(rolls, rolls.length + newRolls.size());
-    for (int i = 0; i < newRolls.size(); i++) {
-      allRolls[rolls.length + i] = newRolls.get(i);
-    }
-
-    return new State(allRolls, state.getLog() + " `" + newRolls + "`");
+    final String rerollValues = allRolls.stream()
+                                        .skip(rolls.length)
+                                        .map(Roll::getValue)
+                                        .map(Object::toString)
+                                        .collect(Collectors.joining(", "));
+    return new State(allRolls.toArray(new Roll[0]), state.getLog() + " `[" + rerollValues + "]`");
   }
 }

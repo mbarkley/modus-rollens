@@ -42,7 +42,7 @@ list
     ;
 
 roll
-    : ROLL modifiers?
+    : DICE (PLUS DICE)* modifiers?
     ;
 
 modifiers

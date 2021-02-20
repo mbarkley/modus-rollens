@@ -177,9 +177,10 @@ public class EvalTest {
 
   @MethodSource("correctResults")
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
-  public void roll_in_direct_message_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
+  public void roll_in_direct_message_with_fixed_seed_should_give_correct_result(Random rand, RollCommand rollCommand, String result) throws ExecutionException, InterruptedException {
     testMessage.setGuild(null);
-    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
+    final CompletableFuture<String> executed = rollCommand
+        .execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
     Assertions.assertEquals(result, observed);
@@ -187,8 +188,9 @@ public class EvalTest {
 
   @MethodSource("correctResults")
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
-  public void roll_in_guild_with_fixed_seed_should_give_correct_result(Random rand, Roll roll, String result) throws ExecutionException, InterruptedException {
-    final CompletableFuture<String> executed = roll.execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
+  public void roll_in_guild_with_fixed_seed_should_give_correct_result(Random rand, RollCommand rollCommand, String result) throws ExecutionException, InterruptedException {
+    final CompletableFuture<String> executed = rollCommand
+        .execute(new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage));
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
     final String observed = executed.get();
     Assertions.assertEquals(result, observed);
@@ -239,8 +241,8 @@ public class EvalTest {
     return Stream.of(
         // basic roll
         arguments(new Random(1337),
-                  new Roll(
-                      new BaseRoll(2, 6),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
                       List.of(),
                       new SumMapper()
                   ),
@@ -248,10 +250,23 @@ public class EvalTest {
                       Test User roll: `[2, 1]`
                       Result: 3"""
         ),
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(
+                          new UniformDicePool(2, 6),
+                          new UniformDicePool(3, 4)
+                      ),
+                      List.of(),
+                      new SumMapper()
+                  ),
+                  """
+                      Test User roll: `[2, 1, 3, 4, 4]`
+                      Result: 14"""
+        ),
         // success count
         arguments(new Random(1337),
-                  new Roll(
-                      new BaseRoll(10, 10),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(10, 10)),
                       List.of(),
                       new SuccessCountMapper(6, 2)
                   ),
@@ -261,8 +276,8 @@ public class EvalTest {
         ),
         // exploding sums
         arguments(new Random(1337),
-                  new Roll(
-                      new BaseRoll(10, 10),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(10, 10)),
                       List.of(
                           new ExplodingModifier(10, 1)
                       ),
@@ -273,8 +288,8 @@ public class EvalTest {
                       Result: 75"""
         ),
         arguments(new Random(1337),
-                  new Roll(
-                      new BaseRoll(10, 10),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(10, 10)),
                       List.of(
                           new ExplodingModifier(7, Integer.MAX_VALUE)
                       ),
@@ -285,8 +300,8 @@ public class EvalTest {
                       Result: 91"""
         ),
         arguments(new Random(1337),
-                  new Roll(
-                      new BaseRoll(10, 10),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(10, 10)),
                       List.of(
                           new ExplodingModifier(7, Integer.MAX_VALUE)
                       ),

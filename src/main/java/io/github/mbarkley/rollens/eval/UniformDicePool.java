@@ -6,13 +6,12 @@ import java.util.Random;
 import java.util.stream.IntStream;
 
 @Value
-public class BaseRoll {
+public class UniformDicePool {
   int numberOfDice;
   int numberOfSides;
 
-  public int[] execute(Random rand) {
+  public IntStream execute(Random rand) {
     return IntStream.generate(() -> rand.nextInt(numberOfSides) + 1)
-                    .limit(numberOfDice)
-                    .toArray();
+                    .limit(numberOfDice);
   }
 }

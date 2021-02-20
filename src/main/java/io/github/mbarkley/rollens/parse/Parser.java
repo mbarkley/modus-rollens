@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class Parser {
-  private static final Pattern ROLL = Pattern.compile("(\\d+)?[dD](\\d+)");
+  private static final Pattern DICE = Pattern.compile("(\\d+)?[dD](\\d+)");
 
   public Optional<Command> parse(String input) {
     final CommandParser parser = initAntlrParser(input);
@@ -48,7 +49,7 @@ public class Parser {
     }
   }
 
-  public Optional<Roll> parseRoll(String input) {
+  public Optional<RollCommand> parseRoll(String input) {
     final CommandParser parser = initAntlrParser(input);
 
     final CommandParser.RollContext rollContext = parser.roll();
@@ -133,22 +134,31 @@ public class Parser {
     }
 
     @Override
-    public Roll visitRoll(CommandParser.RollContext ctx) {
+    public RollCommand visitRoll(CommandParser.RollContext ctx) {
       if (log.isTraceEnabled()) {
         log.trace("Visiting roll context: {}", ctx.getText());
       }
-      final Matcher matcher = ROLL.matcher(ctx.ROLL().getText());
-      if (matcher.matches()) {
-        final int numberOfDice = matcher.group(1) == null ?
-            1 :
-            Integer.parseInt(matcher.group(1));
-        final int numberOfSides = Integer.parseInt(matcher.group(2));
-        final BaseRoll base = new BaseRoll(numberOfDice, numberOfSides);
-        final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
-        return new Roll(base, modifiers.rollModifiers, modifiers.resultMapper);
-      } else {
-        throw new ParseCancellationException();
-      }
+      final UniformDicePool[] uniformDicePools =
+          ctx.DICE()
+             .stream()
+             .map(ParseTree::getText)
+             .map(DICE::matcher)
+             .map(matcher -> {
+               if (matcher.matches()) {
+                 final int numberOfDice = matcher.group(1) == null ?
+                     1 :
+                     Integer.parseInt(matcher.group(1));
+                 final int numberOfSides = Integer.parseInt(matcher.group(2));
+                 return new UniformDicePool(numberOfDice, numberOfSides);
+               } else {
+                 throw new ParseCancellationException();
+               }
+             })
+             .toArray(UniformDicePool[]::new);
+      final DicePool base = new DicePool(uniformDicePools);
+      final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
+
+      return new RollCommand(base, modifiers.rollModifiers, modifiers.resultMapper);
     }
   }
 

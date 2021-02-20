@@ -15,6 +15,7 @@ public class Help implements Command {
       """
           __Roll Dice__
           `!mr 5d10`: Roll five ten-sided dice
+          `!mr 2d6 + 3d4`: Roll two six-sided dice and three four-sided dice.
           `!mr 5d10 t6 f1`: Roll five ten-sided dice and count successes minus failures. Successes are six and above. Failures are one and below.
           `!mr 5d10 t6 f1 e10`: As above, but re-roll tens one time (sometimes called "exploding" dice).
           `!mr 5d10 t6 f1 ie10`: As above, but re-roll tens indefinitely (capped at one-hundred times to prevent abuse).
