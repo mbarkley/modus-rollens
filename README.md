@@ -32,7 +32,7 @@ the same rolls.
 
 | Command   | Meaning                  |
 |-----------|--------------------------|
-|`!mr wereworf 5 6`| Use the saved roll, werewolf, with `num=5` and `diff=6`. With the definition above this is equivalent to `!mr 5d10 t6 f1`.|
+|`!mr werewolf 5 6`| Use the saved roll, werewolf, with `num=5` and `diff=6`. With the definition above this is equivalent to `!mr 5d10 t6 f1`.|
 
 ### Manage Saved Rolls
 | Command   | Meaning                  |

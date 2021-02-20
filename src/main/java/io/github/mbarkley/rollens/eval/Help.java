@@ -26,7 +26,7 @@ public class Help implements Command {
           `!mr save (werewolf num) = {num}d10 t6 f1`: Save a roll called `werewolf` that has a different number of inputs from the other saved roll.
           
           __Use a Saved Roll__
-          `!mr wereworf 5 6`: Use the saved roll, `werewolf`, with `num=5` and `diff=6`.
+          `!mr werewolf 5 6`: Use the saved roll, `werewolf`, with `num=5` and `diff=6`.
           
           __Show Saved Rolls__
           `!mr list`: Lists all saved rolls.
