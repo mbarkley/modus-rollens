@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.dv8tion.jda.api.entities.Message;
 
-import java.util.Arrays;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @ToString
@@ -27,8 +27,9 @@ public class OperationMapper implements ResultMapper {
   private final ResultMapper left;
   private final Op operator;
   private final int right;
+
   @Override
-  public int mapResult(Message message, int[] rawRolls) {
+  public int mapResult(Message message, IntStream rawRolls) {
     final int left = this.left.mapResult(message, rawRolls);
     return operator.apply(left, right);
   }

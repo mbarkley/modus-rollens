@@ -1,10 +1,9 @@
-package io.github.mbarkley.rollens.eval;
+package io.github.mbarkley.rollens.dice;
 
 import lombok.Value;
 
 import java.util.Arrays;
 import java.util.Random;
-import java.util.stream.Stream;
 
 @Value
 public class DicePool {
@@ -14,10 +13,9 @@ public class DicePool {
     this.uniformDicePool = uniformDicePool;
   }
 
-  public Stream<Roll> execute(Random rand) {
+  public PoolResult[] execute(Random rand) {
     return Arrays.stream(uniformDicePool)
-                 .flatMap(p -> p.execute(rand)
-                                .mapToObj(value -> new Roll(p.getNumberOfSides(), value))
-                 );
+                 .map(p -> p.execute(rand))
+                 .toArray(PoolResult[]::new);
   }
 }

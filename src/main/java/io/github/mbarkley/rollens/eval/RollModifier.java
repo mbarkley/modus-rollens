@@ -1,22 +1,10 @@
 package io.github.mbarkley.rollens.eval;
 
-import lombok.Value;
+import io.github.mbarkley.rollens.dice.PoolResult;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public interface RollModifier {
-  @Value
-  class State {
-    Roll[] rolls;
-    String log;
-
-    public int[] getRollValues() {
-      return Arrays.stream(rolls)
-                   .mapToInt(Roll::getValue)
-                   .toArray();
-    }
-  }
-
-  State modify(Random rand, DicePool dicePool, State state);
+  void modify(Random rand, List<PoolResult[]> results);
 }

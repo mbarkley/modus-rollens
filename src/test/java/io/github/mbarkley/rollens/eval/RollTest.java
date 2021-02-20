@@ -111,7 +111,7 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d6 + 3d4",
                   """
-                      Test User roll: `[2, 1, 3, 4, 4]`
+                      Test User roll: `[2, 1][3, 4, 4]`
                       Result: 14"""),
         // operators
         arguments(new Random(1337),
@@ -168,39 +168,49 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d10 t7 e2 f1",
                   """
-                      Test User roll: `[2, 5]` `[10, 3]`
+                      Test User roll: `[2, 5], [10, 3]`
                       Result: 1"""),
         // exploding sum
         arguments(new Random(1337),
                   "!mr 2d6 e2",
                   """
-                      Test User roll: `[2, 1]` `[6]`
+                      Test User roll: `[2, 1], [6]`
+                      Result: 9"""),
+        arguments(new Random(1337),
+                  "!mr d6 + d6 e2",
+                  """
+                      Test User roll: `[2][1], [6][]`
                       Result: 9"""),
         arguments(new Random(1337),
                   "!mr 2d6 ie2",
                   """
-                      Test User roll: `[2, 1]` `[6, 5, 4, 5, 6, 5, 2, 4, 5, 2, 1]`
+                      Test User roll: `[2, 1], [6], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
+                      Result: 48"""),
+        arguments(new Random(1337),
+                  "!mr 1d6 + 1d6 ie2",
+                  """
+                      Test User roll: `[2][1], [6][], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
                       Result: 48"""),
         // exploding success count
         arguments(new Random(1337),
                   "!mr 2d10 t7 e5",
                   """
-                      Test User roll: `[2, 5]` `[10]`
+                      Test User roll: `[2, 5], [10]`
                       Result: 1"""),
         arguments(new Random(1337),
                   "!mr 2d10 t7 ie5",
                   """
-                      Test User roll: `[2, 5]` `[10, 3]`
+                      Test User roll: `[2, 5], [10], [3], []`
                       Result: 1"""),
         arguments(new Random(1337),
                   "!mr 2d10 t7 f2 e5",
                   """
-                      Test User roll: `[2, 5]` `[10]`
+                      Test User roll: `[2, 5], [10]`
                       Result: 0"""),
         arguments(new Random(1337),
                   "!mr 2d10 t7 f2 ie5",
                   """
-                      Test User roll: `[2, 5]` `[10, 3]`
+                      Test User roll: `[2, 5], [10], [3], []`
                       Result: 0""")
     );
   }

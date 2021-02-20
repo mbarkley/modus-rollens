@@ -1,4 +1,4 @@
-package io.github.mbarkley.rollens.eval;
+package io.github.mbarkley.rollens.dice;
 
 import lombok.Value;
 

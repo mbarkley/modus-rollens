@@ -1,20 +1,22 @@
 package io.github.mbarkley.rollens.eval;
 
-import io.github.mbarkley.rollens.eval.RollModifier.State;
+import io.github.mbarkley.rollens.dice.DicePool;
+import io.github.mbarkley.rollens.dice.PoolResult;
 import io.github.mbarkley.rollens.util.MessageUtil;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.dv8tion.jda.api.entities.Message;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
-import static java.lang.String.join;
 
 @RequiredArgsConstructor
 @ToString
@@ -27,19 +29,39 @@ public class RollCommand implements Command {
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
     final Random rand = context.getRand();
-    final Roll[] rolls = base.execute(rand)
-                             .toArray(Roll[]::new);
+    final PoolResult[] baseResults = base.execute(rand);
     final Message message = context.getMessage();
     final String username = MessageUtil.getAuthorDisplayName(message);
-    final String arrayValues = Arrays.stream(rolls).map(Roll::getValue).map(Object::toString)
-                                 .collect(Collectors.joining(", "));
-    State state = new State(rolls, format("%s roll: `[%s]`", username, arrayValues));
-    for (RollModifier rollModifier : rollModifiers) {
-      state = rollModifier.modify(rand, base, state);
-    }
-    final int value = resultMapper.mapResult(message, state.getRollValues());
 
-    return CompletableFuture.completedFuture(format("%s\nResult: %d", state.getLog(), value));
+    final List<PoolResult[]> results = new ArrayList<>();
+    results.add(baseResults);
+
+    for (RollModifier rollModifier : rollModifiers) {
+      rollModifier.modify(rand, results);
+    }
+    final IntStream allRollValues = results.stream()
+                                           .flatMap(Arrays::stream)
+                                           .flatMapToInt(pr -> Arrays.stream(pr.getValues()));
+    final int value = resultMapper.mapResult(message, allRollValues);
+    final String rollDisplay = displayRollsString(results);
+
+    return CompletableFuture.completedFuture(format("%s roll: `%s`\nResult: %d", username, rollDisplay, value));
+  }
+
+  @NotNull
+  private String displayRollsString(List<PoolResult[]> results) {
+    final StringBuilder sb = new StringBuilder();
+    final String delimiter = ", ";
+    for (var result : results) {
+      for (var pr : result) {
+        pr.writeString(sb);
+      }
+      sb.append(delimiter);
+    }
+    if (!results.isEmpty()) {
+      sb.delete(sb.length() - delimiter.length(), sb.length());
+    }
+    return sb.toString();
   }
 
 }

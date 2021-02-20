@@ -6,7 +6,7 @@ import lombok.ToString;
 import lombok.With;
 import net.dv8tion.jda.api.entities.Message;
 
-import static java.lang.String.format;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @ToString
@@ -17,14 +17,16 @@ public class SuccessCountMapper implements ResultMapper {
   private final int failureThreshold;
 
   @Override
-  public int mapResult(Message message, int[] rawRolls) {
-    int successes = 0;
-    int failures = 0;
-    for (int roll : rawRolls) {
-      if (roll >= successThreshold) successes++;
-      if (roll <= failureThreshold) failures++;
-    }
+  public int mapResult(Message message, IntStream rawRolls) {
 
-    return successes - failures;
+    return rawRolls.map(value -> {
+      if (value >= successThreshold) {
+        return 1;
+      } else if (value <= failureThreshold) {
+        return -1;
+      } else {
+        return 0;
+      }
+    }).sum();
   }
 }

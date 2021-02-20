@@ -3,6 +3,8 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.antlr.CommandLexer;
 import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
+import io.github.mbarkley.rollens.dice.DicePool;
+import io.github.mbarkley.rollens.dice.UniformDicePool;
 import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.eval.OperationMapper.Op;
 import lombok.Data;

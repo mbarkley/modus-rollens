@@ -1,14 +1,13 @@
 package io.github.mbarkley.rollens.eval;
 
+import io.github.mbarkley.rollens.dice.PoolResult;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -19,25 +18,28 @@ public class ExplodingModifier implements RollModifier {
   private final int maxIterations;
 
   @Override
-  public State modify(Random rand, DicePool dicePool, State state) {
-    final Roll[] rolls = state.getRolls();
-    List<Roll> allRolls = new ArrayList<>(Arrays.asList(rolls));
-
-    int iterationCap = Math.min(maxIterations, MAX_ITERATION_CAP);
-    for (var roll : rolls) {
-      int iterations = 0;
-      while (roll.getValue() >= explodingThreshold && iterations < iterationCap) {
-        iterations++;
-        roll = new Roll(roll.getNumDiceSides(), rand.nextInt(roll.getNumDiceSides()) + 1);
-        allRolls.add(roll);
-      }
+  public void modify(Random rand, List<PoolResult[]> allResults) {
+    if (allResults.isEmpty()) {
+      throw new IllegalArgumentException("Empty results");
     }
 
-    final String rerollValues = allRolls.stream()
-                                        .skip(rolls.length)
-                                        .map(Roll::getValue)
-                                        .map(Object::toString)
-                                        .collect(Collectors.joining(", "));
-    return new State(allRolls.toArray(new Roll[0]), state.getLog() + " `[" + rerollValues + "]`");
+    int iterationCap = Math.min(maxIterations, MAX_ITERATION_CAP);
+    for (int i = 0; i < iterationCap; i++) {
+      final PoolResult[] baseResults = allResults.get(allResults.size() - 1);
+      final PoolResult[] explodedResults =
+          Arrays.stream(baseResults)
+                .filter(pr -> !pr.isEmpty())
+                .map(baseResult -> new PoolResult(baseResult.getPool(),
+                                                  Arrays.stream(baseResult.getValues())
+                                                        .filter(value -> value >= explodingThreshold)
+                                                        .map(value -> baseResult
+                                                            .getPool()
+                                                            .rollSingle(rand))
+                                                        .toArray())
+                )
+                .toArray(PoolResult[]::new);
+      allResults.add(explodedResults);
+      if (explodedResults.length == 0 || Arrays.stream(explodedResults).allMatch(PoolResult::isEmpty)) break;
+    }
   }
 }
