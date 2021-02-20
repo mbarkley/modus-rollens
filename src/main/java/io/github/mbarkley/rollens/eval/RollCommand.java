@@ -37,9 +37,9 @@ public class RollCommand implements Command {
     for (RollModifier rollModifier : rollModifiers) {
       state = rollModifier.modify(rand, base, state);
     }
-    final String value = resultMapper.mapResult(message, state.getRollValues());
+    final int value = resultMapper.mapResult(message, state.getRollValues());
 
-    return CompletableFuture.completedFuture(format("%s\nResult: %s", state.getLog(), value));
+    return CompletableFuture.completedFuture(format("%s\nResult: %d", state.getLog(), value));
   }
 
 }

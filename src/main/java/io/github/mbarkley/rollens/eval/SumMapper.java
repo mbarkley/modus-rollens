@@ -12,8 +12,7 @@ import java.util.Arrays;
 @EqualsAndHashCode
 public class SumMapper implements ResultMapper {
   @Override
-  public String mapResult(Message message, int[] rawRolls) {
-    int sum = Arrays.stream(rawRolls).sum();
-    return String.valueOf(sum);
+  public int mapResult(Message message, int[] rawRolls) {
+    return Arrays.stream(rawRolls).sum();
   }
 }

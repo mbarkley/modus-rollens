@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static io.github.mbarkley.rollens.eval.OperationMapper.Op.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ParserTest {
@@ -100,6 +101,37 @@ public class ParserTest {
         arguments("!mr d6", new RollCommand(new DicePool(new UniformDicePool(1, 6)), List.of(), new SumMapper())),
         arguments("!mr D6", new RollCommand(new DicePool(new UniformDicePool(1, 6)), List.of(), new SumMapper())),
         arguments("!mr 2d6 + 3d4", new RollCommand(new DicePool(new UniformDicePool(2, 6), new UniformDicePool(3, 4)), List.of(), new SumMapper())),
+        // operators
+        arguments("!mr 2d6 + 2", new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(new SumMapper(), PLUS, 2)
+                  )
+        ),
+        arguments("!mr 2d6 - 2", new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(new SumMapper(), MINUS, 2)
+                  )
+        ),
+        arguments("!mr 2d6 * 2", new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(new SumMapper(), MULTIPLY, 2)
+                  )
+        ),
+        arguments("!mr 2d6 / 2", new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(new SumMapper(), DIVIDE, 2)
+                  )
+        ),
+        arguments("!mr 2d6 * 2 + 1", new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(new OperationMapper(new SumMapper(), MULTIPLY, 2), PLUS, 1)
+                  )
+        ),
         // success counts
         arguments("!mr 2d6 t6", new RollCommand(new DicePool(new UniformDicePool(2, 6)), List.of(), new SuccessCountMapper(6, 0))),
         arguments("!mr 2d6 f1", new RollCommand(new DicePool(new UniformDicePool(2, 6)), List.of(), new SuccessCountMapper(Integer.MAX_VALUE, 1))),

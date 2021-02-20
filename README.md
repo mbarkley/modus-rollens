@@ -16,6 +16,7 @@ rolls by name for your Discord server.
 |`!mr 5d10 t6 f1`| Roll five ten-sided dice and count successes minus failures. Successes are six and above. Failures are one and below.|
 |`!mr 5d10 t6 f1 e10`| As above, but re-roll tens one time (sometimes called "exploding" dice).|
 |`!mr 5d10 t6 f1 ie10`| As above, but re-roll tens indefinitely (capped at one-hundred times to prevent abuse).|
+|`!mr 2d6 + 1`| Roll two six-sided dice and add one (also supports `-`, `*`, `/` -- must come after other flags).|
 
 ### Save Custom Rolls by Name
 Save rolls by name, with arguments (number of dice, number of sides of dice, etc.) that can be provided

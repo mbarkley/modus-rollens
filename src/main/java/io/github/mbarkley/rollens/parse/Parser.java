@@ -4,6 +4,7 @@ import io.github.mbarkley.rollens.antlr.CommandLexer;
 import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
 import io.github.mbarkley.rollens.eval.*;
+import io.github.mbarkley.rollens.eval.OperationMapper.Op;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -158,7 +159,25 @@ public class Parser {
       final DicePool base = new DicePool(uniformDicePools);
       final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
 
-      return new RollCommand(base, modifiers.rollModifiers, modifiers.resultMapper);
+      return new RollCommand(base, modifiers.rollModifiers, new ConstOpsVisitor().visitConstOp(modifiers.resultMapper, ctx.constOp()));
+    }
+  }
+
+  private static class ConstOpsVisitor {
+    public ResultMapper visitConstOp(ResultMapper cur, CommandParser.ConstOpContext ctx) {
+      if (ctx == null) {
+        return cur;
+      } else {
+        Op op = switch(ctx.getAltNumber()) {
+          case 1 -> Op.PLUS;
+          case 2 -> Op.MINUS;
+          case 3 -> Op.MULTIPLY;
+          case 4 -> Op.DIVIDE;
+          default -> throw new UnsupportedOperationException();
+        };
+
+        return visitConstOp(new OperationMapper(cur, op, Integer.parseInt(ctx.NUMBER().getText())), ctx.constOp());
+      }
     }
   }
 

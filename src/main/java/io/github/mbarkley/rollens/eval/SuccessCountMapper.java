@@ -17,7 +17,7 @@ public class SuccessCountMapper implements ResultMapper {
   private final int failureThreshold;
 
   @Override
-  public String mapResult(Message message, int[] rawRolls) {
+  public int mapResult(Message message, int[] rawRolls) {
     int successes = 0;
     int failures = 0;
     for (int roll : rawRolls) {
@@ -25,6 +25,6 @@ public class SuccessCountMapper implements ResultMapper {
       if (roll <= failureThreshold) failures++;
     }
 
-    return format("%d", successes - failures);
+    return successes - failures;
   }
 }

@@ -263,6 +263,81 @@ public class EvalTest {
                       Test User roll: `[2, 1, 3, 4, 4]`
                       Result: 14"""
         ),
+        // Operators
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(
+                          new SumMapper(),
+                          OperationMapper.Op.PLUS,
+                          2
+                      )
+                  ),
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 5"""
+        ),
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(
+                          new SumMapper(),
+                          OperationMapper.Op.MINUS,
+                          2
+                      )
+                  ),
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 1"""
+        ),
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(
+                          new SumMapper(),
+                          OperationMapper.Op.MULTIPLY,
+                          2
+                      )
+                  ),
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 6"""
+        ),
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(
+                          new SumMapper(),
+                          OperationMapper.Op.DIVIDE,
+                          2
+                      )
+                  ),
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 1"""
+        ),
+        arguments(new Random(1337),
+                  new RollCommand(
+                      new DicePool(new UniformDicePool(2, 6)),
+                      List.of(),
+                      new OperationMapper(
+                          new OperationMapper(
+                              new SumMapper(),
+                              OperationMapper.Op.PLUS,
+                              3
+                          ),
+                          OperationMapper.Op.DIVIDE,
+                          2
+                      )
+                  ),
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 3"""
+        ),
         // success count
         arguments(new Random(1337),
                   new RollCommand(

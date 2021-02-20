@@ -42,7 +42,14 @@ list
     ;
 
 roll
-    : DICE (PLUS DICE)* modifiers?
+    : DICE (PLUS DICE)* modifiers? constOp?
+    ;
+
+constOp
+    : PLUS NUMBER constOp?
+    | MINUS NUMBER constOp?
+    | TIMES NUMBER constOp?
+    | DIVIDE NUMBER constOp?
     ;
 
 modifiers
