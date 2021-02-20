@@ -233,6 +233,15 @@ public class EvalTest {
                 Evaluating: `5d10 t6 f1`
                 Test User roll: `[2, 5, 10, 3, 10]`
                 Result: 2"""
+        ),
+        arguments(
+            new Random(1337),
+            new Save("foo", List.of("n", "m", "a"), "{n}d{m} + {a}"),
+            new Invoke("foo", new int[] {5, 10, 6}),
+            """
+                Evaluating: `5d10 + 6`
+                Test User roll: `[2, 5, 10, 3, 10]`
+                Result: 36"""
         )
     );
   }

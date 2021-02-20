@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -164,9 +163,9 @@ public class Parser {
   }
 
   private static class ConstOpsVisitor {
-    public ResultMapper visitConstOp(ResultMapper cur, CommandParser.ConstOpContext ctx) {
+    public ResultMapper visitConstOp(ResultMapper left, CommandParser.ConstOpContext ctx) {
       if (ctx == null) {
-        return cur;
+        return left;
       } else {
         Op op = switch(ctx.getAltNumber()) {
           case 1 -> Op.PLUS;
@@ -176,7 +175,12 @@ public class Parser {
           default -> throw new UnsupportedOperationException();
         };
 
-        return visitConstOp(new OperationMapper(cur, op, Integer.parseInt(ctx.NUMBER().getText())), ctx.constOp());
+          if (ctx.NUMBER() != null) {
+            final int right = Integer.parseInt(ctx.NUMBER().getText());
+            return visitConstOp(new OperationMapper(left, op, right), ctx.constOp());
+          } else {
+            throw new ParseCancellationException();
+          }
       }
     }
   }

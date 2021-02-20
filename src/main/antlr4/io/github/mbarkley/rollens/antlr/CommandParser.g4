@@ -46,10 +46,10 @@ roll
     ;
 
 constOp
-    : PLUS NUMBER constOp?
-    | MINUS NUMBER constOp?
-    | TIMES NUMBER constOp?
-    | DIVIDE NUMBER constOp?
+    : PLUS (NUMBER | REFERENCE) constOp?
+    | MINUS (NUMBER | REFERENCE) constOp?
+    | TIMES (NUMBER | REFERENCE) constOp?
+    | DIVIDE (NUMBER | REFERENCE) constOp?
     ;
 
 modifiers

@@ -49,7 +49,9 @@ fragment D : ('d' | 'D');
 
 DICE : VALUE? D VALUE;
 
-VALUE : (NUMBER | '{' IDENTIFIER '}');
+REFERENCE : '{' IDENTIFIER '}';
+
+fragment VALUE : (NUMBER | REFERENCE);
 
 EXCLAMATION : '!';
 
