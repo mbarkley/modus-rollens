@@ -15,13 +15,19 @@ public class Help implements Command {
       """
           __Roll Dice__
           `!mr 5d10`: Roll five ten-sided dice
-          `!mr 2d6 + 3d4`: Roll two six-sided dice and three four-sided dice.
-          `!mr 5d10 t6 f1`: Roll five ten-sided dice and count successes minus failures. Successes are six and above. Failures are one and below.
-          `!mr 5d10 t6 f1 e10`: As above, but re-roll tens one time (sometimes called "exploding" dice).
-          `!mr 5d10 t6 f1 ie10`: As above, but re-roll tens indefinitely (capped at one-hundred times to prevent abuse).
-          `!mr 2d6 + 1`: Roll two six-sided dice and add one (also supports `-`, `*`, `/` -- must come after other flags).
+          `!mr 2d6 + 3d4`: Roll two six-sided dice and three four-sided dice (can also use `-`, `*`, and `/`).
+          `!mr 2d6 + 1`: Roll two six-sided dice and add one (also supports `-`, `*`, `/`); must come after other flags.
+          `!mr 4 (2d10 + d6)`: Repeat roll of two ten-sided dice and one six-sided die four times. Repeated roll can include other modifiers.
           
-          __Save Rolls By Name__
+          __Counting Results__
+          `!mr 5d10 t6`: Roll five ten-sided dice and count successes (six and above).
+          `!mr 5d10 t6 f2`: As above, but subtract failures (2 or below) from successes.
+          
+          __Re-Roll Modifiers__
+          `!mr 5d10 e10`: Roll five ten-sided dice but roll one additional die for each ten (sometimes called "exploding" dice).
+          `!mr 5d10 ie10`: As above, but explode on tens indefinitely (capped at one-hundred times to prevent abuse).
+          
+          __Save Custom Rolls__
           `!mr save (werewolf num diff) = {num}d10 t{diff} f1`: Save a roll called `werewolf`.
           `!mr save (werewolf num) = {num}d10 t6 f1`: Save a roll called `werewolf` that has a different number of inputs from the other saved roll.
           
