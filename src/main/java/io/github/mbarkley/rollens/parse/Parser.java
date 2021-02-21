@@ -148,25 +148,36 @@ public class Parser {
       }
       return switch(ctx.getAltNumber()) {
         case 1 -> visitRollExpressionBasis(ctx.rollExpressionBasis());
-        case 2 -> visitRollExpression(ctx.rollExpression(0)); // LB rollExpression RB
-        case 3 -> visitRollExpressionWithConstantOp(ctx);
-        case 4 -> {
-          final Operator operator;
-          if (ctx.PLUS() != null) {
-            operator = Operator.PLUS;
-          } else if (ctx.MINUS() != null) {
-            operator = Operator.MINUS;
-          } else if (ctx.TIMES() != null) {
-            operator = Operator.MULTIPLY;
-          } else if (ctx.DIVIDE() != null) {
-            operator = Operator.DIVIDE;
-          } else {
-            throw new UnsupportedOperationException(ctx.getText());
+        case 2 -> {
+          try {
+            final int num = Integer.parseInt(ctx.NUMBER().getText());
+            final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
+            yield new RepeatRollExpression(rollExpression, num);
+          } catch (NumberFormatException nfe) {
+            throw new ParseCancellationException(nfe);
           }
-          yield new ComplexRollExpression(operator, visitRollExpression(ctx.rollExpression(0)), visitRollExpression(ctx.rollExpression(1)));
         }
+        case 3 -> visitRollExpression(ctx.rollExpression(0)); // LB rollExpression RB
+        case 4 -> visitRollExpressionWithConstantOp(ctx);
+        case 5 -> visitComplexExpression(ctx);
         default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
       };
+    }
+
+    private ComplexRollExpression visitComplexExpression(CommandParser.RollExpressionContext ctx) {
+      final Operator operator;
+      if (ctx.PLUS() != null) {
+        operator = Operator.PLUS;
+      } else if (ctx.MINUS() != null) {
+        operator = Operator.MINUS;
+      } else if (ctx.TIMES() != null) {
+        operator = Operator.MULTIPLY;
+      } else if (ctx.DIVIDE() != null) {
+        operator = Operator.DIVIDE;
+      } else {
+        throw new UnsupportedOperationException(ctx.getText());
+      }
+      return new ComplexRollExpression(operator, visitRollExpression(ctx.rollExpression(0)), visitRollExpression(ctx.rollExpression(1)));
     }
 
     private RollExpression visitRollExpressionWithConstantOp(CommandParser.RollExpressionContext ctx) {

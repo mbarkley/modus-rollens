@@ -35,11 +35,18 @@ public class ComplexRollExpression implements RollExpression {
     final IntStream allRollValues = Arrays.stream(outputs)
                                           .mapToInt(Output::getValue);
     final int value = allRollValues.reduce(operator::apply).orElseThrow(IllegalArgumentException::new);
+    final List<List<PoolResult>> allResults = mergeResults(outputs);
+
+    return new Output(allResults, value);
+  }
+
+  @NotNull
+  private List<List<PoolResult>> mergeResults(Output[] outputs) {
     final List<List<PoolResult>> allResults = new ArrayList<>();
     for (int i = 0; ; i++) {
       final List<PoolResult> poolList = new ArrayList<>();
       allResults.add(poolList);
-      for (var output : outputs) {
+      for (var output : Arrays.asList(outputs)) {
         final List<List<PoolResult>> results = output.getResults();
         if (i < results.size()) {
           poolList.addAll(results.get(i));
@@ -50,7 +57,7 @@ public class ComplexRollExpression implements RollExpression {
         break;
       }
     }
-
-    return new Output(allResults, value);
+    return allResults;
   }
+
 }

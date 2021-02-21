@@ -87,7 +87,6 @@ public class ParserTest {
   private static Stream<Arguments> badExpressions() {
     return Stream.of(
         arguments("!foo 2d6"),
-        arguments("!mr 2 d6"),
         arguments("!mr 2d 6"),
         arguments("!mr -2d6"),
         arguments("!mr 2d-6"),

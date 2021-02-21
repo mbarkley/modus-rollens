@@ -48,9 +48,10 @@ roll
 // Set alt numbers manually as workaround for bug
 rollExpression
     : rollExpressionBasis {_localctx.setAltNumber(1);}
-    | LB rollExpression RB {_localctx.setAltNumber(2);}
-    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) (NUMBER | REFERENCE) {_localctx.setAltNumber(3);}
-    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) rollExpression {_localctx.setAltNumber(4);}
+    | (NUMBER | REFERENCE) rollExpression {_localctx.setAltNumber(2);}
+    | LB rollExpression RB {_localctx.setAltNumber(3);}
+    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) (NUMBER | REFERENCE) {_localctx.setAltNumber(4);}
+    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) rollExpression {_localctx.setAltNumber(5);}
     ;
 
 rollExpressionBasis
