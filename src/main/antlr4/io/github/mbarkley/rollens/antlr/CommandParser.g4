@@ -47,7 +47,7 @@ roll
 
 // Set alt numbers manually as workaround for bug
 rollExpression
-    : constExpression rollExpression {_localctx.setAltNumber(1);}
+    : numeric rollExpression {_localctx.setAltNumber(1);}
     | rollExpression unaryConstantOp {_localctx.setAltNumber(2);}
     | LB rollExpression RB {_localctx.setAltNumber(3);}
     | rollExpression op=(DIVIDE|TIMES) rollExpression {_localctx.setAltNumber(4);}
@@ -57,15 +57,17 @@ rollExpression
 
 unaryConstantOp
     : op=(TIMES|DIVIDE) numeric {_localctx.setAltNumber(1);}
-    | op=(TIMES|DIVIDE) constExpression op2=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(2);}
-    | op=(TIMES|DIVIDE) constExpression op2=(PLUS|MINUS) constExpression {_localctx.setAltNumber(3);}
-    | op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(4);}
+    | op=(TIMES|DIVIDE) LB constExpression RB {_localctx.setAltNumber(2);}
+    | op=(TIMES|DIVIDE) constExpression op2=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(3);}
+    | op=(TIMES|DIVIDE) constExpression op2=(PLUS|MINUS) constExpression {_localctx.setAltNumber(4);}
+    | op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(5);}
     ;
 
 constExpression
     : numeric {_localctx.setAltNumber(1);}
-    | constExpression op=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(2);}
-    | constExpression op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(3);}
+    | LB constExpression RB {_localctx.setAltNumber(2);}
+    | constExpression op=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(3);}
+    | constExpression op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(4);}
     ;
 
 numeric

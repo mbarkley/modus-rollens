@@ -356,7 +356,22 @@ public class RollTest {
                   "!mr d10 + 2 * 3 * 3",
                   """
                       Test User roll: `[2]`
-                      Result: 20""")
+                      Result: 20"""),
+        arguments(new Random(1337),
+                  "!mr (d10 + 2) * 3",
+                  """
+                      Test User roll: `[2]`
+                      Result: 12"""),
+        arguments(new Random(1337),
+                  "!mr d10 + (2 * 3)",
+                  """
+                      Test User roll: `[2]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr d10 * (2 + 3) / 2",
+                  """
+                      Test User roll: `[2]`
+                      Result: 5""")
     );
   }
 }

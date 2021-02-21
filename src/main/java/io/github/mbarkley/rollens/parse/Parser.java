@@ -154,7 +154,7 @@ public class Parser {
     }
 
     private RepeatRollExpression visitRepeatRollExpression(CommandParser.RollExpressionContext ctx) {
-      final int num = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression());
+      final int num = parseNumeric(ctx.numeric());
       final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
       return new RepeatRollExpression(rollExpression, num);
     }
@@ -176,14 +176,18 @@ public class Parser {
           final int constValue = parseNumeric(ctx.numeric());
           yield new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(constValue));
         }
-        case 2, 3 -> {
+        case 2 -> {
+          final int constValue = new ConstExpressionVisitor().evaluateBinaryConstExpression(ctx.constExpression(0));
+          yield new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(constValue));
+        }
+        case 3, 4 -> {
           final int rightValue = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression(1));
           final RollExpression leftSubExpression =
               new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(rightValue));
 
           yield new ComplexRollExpression(operator(ctx.op2), leftSubExpression, new ConstantRollExpression(rightValue));
         }
-        case 4 -> {
+        case 5 -> {
           final int constValue = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression(0));
           yield new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(constValue));
         }
@@ -220,7 +224,8 @@ public class Parser {
     public int evaluateConstExpression(CommandParser.ConstExpressionContext ctx) {
       return switch(ctx.getAltNumber()) {
         case 1 -> parseNumeric(ctx.numeric());
-        case 2, 3 -> evaluateBinaryConstExpression(ctx);
+        case 2 -> evaluateConstExpression(ctx.constExpression(0));
+        case 3, 4 -> evaluateBinaryConstExpression(ctx);
         default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
       };
     }
