@@ -3,9 +3,7 @@ package io.github.mbarkley.rollens.eval;
 import io.github.mbarkley.rollens.dice.DicePool;
 import io.github.mbarkley.rollens.dice.PoolResult;
 import io.github.mbarkley.rollens.util.MessageUtil;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +22,8 @@ import static java.lang.String.format;
 public class RollCommand implements Command {
   private final DicePool base;
   private final List<RollModifier> rollModifiers;
+  @With
+  @Getter
   private final ResultMapper resultMapper;
 
   @Override

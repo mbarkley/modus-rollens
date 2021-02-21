@@ -2,7 +2,7 @@ parser grammar CommandParser;
 
 options {
     tokenVocab = CommandLexer;
-    contextSuperClass=org.antlr.v4.runtime.RuleContextWithAltNum;
+    contextSuperClass=io.github.mbarkley.rollens.antlr.RuleContextWithAltNum;
 }
 
 // Grammar rules
@@ -42,14 +42,18 @@ list
     ;
 
 roll
-    : DICE (PLUS DICE)* modifiers? constOp?
+    : rollExpression
     ;
 
-constOp
-    : PLUS (NUMBER | REFERENCE) constOp?
-    | MINUS (NUMBER | REFERENCE) constOp?
-    | TIMES (NUMBER | REFERENCE) constOp?
-    | DIVIDE (NUMBER | REFERENCE) constOp?
+// Set alt numbers manually as workaround for bug
+rollExpression
+    : rollExpressionBasis {_localctx.setAltNumber(1);}
+    | LB rollExpression RB {_localctx.setAltNumber(2);}
+    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) (NUMBER | REFERENCE) {_localctx.setAltNumber(3);}
+    ;
+
+rollExpressionBasis
+    : DICE (PLUS DICE)* modifiers?
     ;
 
 modifiers

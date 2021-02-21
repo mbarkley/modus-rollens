@@ -211,7 +211,28 @@ public class RollTest {
                   "!mr 2d10 t7 f2 ie5",
                   """
                       Test User roll: `[2, 5], [10], [3], []`
-                      Result: 0""")
+                      Result: 0"""),
+        // nested expressions
+        arguments(new Random(1337),
+                  "!mr (2d10 f2 t7)",
+                  """
+                      Test User roll: `[2, 5]`
+                      Result: -1"""),
+        arguments(new Random(1337),
+                  "!mr (2d10 f2 t7) + 2",
+                  """
+                      Test User roll: `[2, 5]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr (2d10 f2 t7 + 2)",
+                  """
+                      Test User roll: `[2, 5]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr (2d10 f2 t7 + 2) - 2",
+                  """
+                      Test User roll: `[2, 5]`
+                      Result: -1""")
     );
   }
 }

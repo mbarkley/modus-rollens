@@ -137,9 +137,43 @@ public class Parser {
 
     @Override
     public RollCommand visitRoll(CommandParser.RollContext ctx) {
+      return visitRollExpression(ctx.rollExpression());
+    }
+
+    @Override
+    public RollCommand visitRollExpression(CommandParser.RollExpressionContext ctx) {
       if (log.isTraceEnabled()) {
         log.trace("Visiting roll context: {}", ctx.getText());
       }
+      return switch(ctx.getAltNumber()) {
+        case 1 -> visitRollExpressionBasis(ctx.rollExpressionBasis());
+        case 2 -> visitRollExpression(ctx.rollExpression()); // LB rollExpression RB
+        case 3 -> visitRollExpressionWithConstantOp(ctx);
+        default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
+      };
+    }
+
+    private RollCommand visitRollExpressionWithConstantOp(CommandParser.RollExpressionContext ctx) {
+      final Op op;
+      if (ctx.PLUS() != null) {
+        op = Op.PLUS;
+      } else if (ctx.MINUS() != null) {
+        op = Op.MINUS;
+      } else if (ctx.TIMES() != null) {
+        op = Op.MULTIPLY;
+      } else if (ctx.DIVIDE() != null) {
+        op = Op.DIVIDE;
+      } else {
+        throw new UnsupportedOperationException();
+      }
+
+      final int right = Integer.parseInt(ctx.NUMBER().getText());
+      final RollCommand cmd = visitRollExpression(ctx.rollExpression());
+      return cmd.withResultMapper(new OperationMapper(cmd.getResultMapper(), op, right));
+    }
+
+    @NotNull
+    public RollCommand visitRollExpressionBasis(CommandParser.RollExpressionBasisContext ctx) {
       final UniformDicePool[] uniformDicePools =
           ctx.DICE()
              .stream()
@@ -160,30 +194,7 @@ public class Parser {
       final DicePool base = new DicePool(uniformDicePools);
       final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
 
-      return new RollCommand(base, modifiers.rollModifiers, new ConstOpsVisitor().visitConstOp(modifiers.resultMapper, ctx.constOp()));
-    }
-  }
-
-  private static class ConstOpsVisitor {
-    public ResultMapper visitConstOp(ResultMapper left, CommandParser.ConstOpContext ctx) {
-      if (ctx == null) {
-        return left;
-      } else {
-        Op op = switch(ctx.getAltNumber()) {
-          case 1 -> Op.PLUS;
-          case 2 -> Op.MINUS;
-          case 3 -> Op.MULTIPLY;
-          case 4 -> Op.DIVIDE;
-          default -> throw new UnsupportedOperationException();
-        };
-
-          if (ctx.NUMBER() != null) {
-            final int right = Integer.parseInt(ctx.NUMBER().getText());
-            return visitConstOp(new OperationMapper(left, op, right), ctx.constOp());
-          } else {
-            throw new ParseCancellationException();
-          }
-      }
+      return new RollCommand(base, modifiers.rollModifiers, modifiers.resultMapper);
     }
   }
 
