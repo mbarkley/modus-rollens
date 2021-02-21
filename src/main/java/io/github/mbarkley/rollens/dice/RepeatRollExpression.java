@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -25,19 +26,24 @@ public class RepeatRollExpression implements RollExpression {
                                        .limit(repeat)
                                        .collect(Collectors.toList());
 
+    if (outputs.isEmpty()) {
+      return new Output(List.of(), 0);
+    }
+
     final List<List<PoolResult>> allResults = new ArrayList<>();
-    for (int i = 0; ; i++) {
-      final List<PoolResult> poolList = new ArrayList<>();
-      allResults.add(poolList);
-      for (var output : outputs) {
-        final List<List<PoolResult>> results = output.getResults();
-        if (i < results.size()) {
-          poolList.addAll(results.get(i));
-        }
-      }
-      if (poolList.isEmpty()) {
-        allResults.remove(i);
-        break;
+    final int iLen = outputs.get(0).getResults().size();
+    for (int i = 0; i < iLen; i++) {
+      final List<PoolResult> cur = new ArrayList<>();
+      allResults.add(cur);
+      final int jLen = outputs.get(0).getResults().get(i).size();
+      for (int j = 0; j < jLen; j++) {
+        final int i1 = i, j1 = j;
+        final PoolResult poolResult = outputs.stream()
+                                             .map(Output::getResults)
+                                             .map(l -> l.get(i1).get(j1))
+                                             .reduce(PoolResult::combine)
+                                             .orElseThrow(IllegalStateException::new);
+        cur.add(poolResult);
       }
     }
 
