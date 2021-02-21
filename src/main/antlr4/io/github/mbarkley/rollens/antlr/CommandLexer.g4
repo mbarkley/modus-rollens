@@ -18,8 +18,6 @@ TIMES : '*';
 
 DIVIDE : '/';
 
-MOD : '%';
-
 PLUS : '+';
 
 MINUS : '-';
@@ -27,19 +25,6 @@ MINUS : '-';
 LB : '(';
 
 RB : ')';
-
-LSB : '[';
-
-RSB : ']';
-
-// Relation symbols
-LT : '<';
-
-GT : '>';
-
-LTE : '<=';
-
-GTE : '>=';
 
 EQ : '=';
 

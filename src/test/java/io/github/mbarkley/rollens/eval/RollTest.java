@@ -19,7 +19,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -55,7 +58,7 @@ public class RollTest {
 
   @ParameterizedTest(name = "roll \"{1}\" as {2}")
   @MethodSource("rolls")
-  public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException, TimeoutException {
+  public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException {
     final Optional<Command> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
     ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, rand, testMessage);
@@ -277,7 +280,83 @@ public class RollTest {
                   "!mr 2 (d10 t5 f1 + d4 t3 f1)",
                   """
                       Test User roll: `[2, 10][1, 4]`
-                      Result: 1""")
+                      Result: 1"""),
+        // precedence
+        arguments(new Random(1337),
+                  "!mr d10 + d10 * d10",
+                  """
+                      Test User roll: `[2][5][10]`
+                      Result: 52"""),
+        arguments(new Random(1337),
+                  "!mr d10 - d10 * d10",
+                  """
+                      Test User roll: `[2][5][10]`
+                      Result: -48"""),
+        arguments(new Random(1337),
+                  "!mr d10 + d10 / d3",
+                  """
+                      Test User roll: `[2][5][3]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr d10 - d10 / d3",
+                  """
+                      Test User roll: `[2][5][3]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr d10 * d10 + d10",
+                  """
+                      Test User roll: `[2][5][10]`
+                      Result: 20"""),
+        arguments(new Random(1337),
+                  "!mr d10 / d3 + d10",
+                  """
+                      Test User roll: `[2][1][10]`
+                      Result: 12"""),
+        arguments(new Random(1337),
+                  "!mr d10 / d3 - d10",
+                  """
+                      Test User roll: `[2][1][10]`
+                      Result: -8"""),
+        arguments(new Random(1337),
+                  "!mr d10 * d10 / d3",
+                  """
+                      Test User roll: `[2][5][3]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr (d10 + 10) / d10 * d10",
+                  """
+                      Test User roll: `[2][5][10]`
+                      Result: 20"""),
+        arguments(new Random(1337),
+                  "!mr d10 * d10 / d10",
+                  """
+                      Test User roll: `[2][5][10]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr d10 * 2 + 1",
+                  """
+                      Test User roll: `[2]`
+                      Result: 5"""),
+        arguments(new Random(1337),
+                  "!mr d10 + 2 * 3",
+                  """
+                      Test User roll: `[2]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr d10 * 2 + 1 + 3",
+                  """
+                      Test User roll: `[2]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr d10 * 2 + 1 * 3",
+                  """
+                      Test User roll: `[2]`
+                      Result: 7"""),
+        arguments(new Random(1337),
+                  "!mr d10 + 2 * 3 * 3",
+                  """
+                      Test User roll: `[2]`
+                      Result: 20""")
     );
   }
 }

@@ -9,10 +9,7 @@ import io.github.mbarkley.rollens.math.Operator;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -147,60 +144,54 @@ public class Parser {
         log.trace("Visiting roll context: {}", ctx.getText());
       }
       return switch(ctx.getAltNumber()) {
-        case 1 -> visitRollExpressionBasis(ctx.rollExpressionBasis());
-        case 2 -> {
-          try {
-            final int num = Integer.parseInt(ctx.NUMBER().getText());
-            final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
-            yield new RepeatRollExpression(rollExpression, num);
-          } catch (NumberFormatException nfe) {
-            throw new ParseCancellationException(nfe);
-          }
-        }
-        case 3 -> visitRollExpression(ctx.rollExpression(0)); // LB rollExpression RB
-        case 4 -> visitRollExpressionWithConstantOp(ctx);
-        case 5 -> visitComplexExpression(ctx);
+        case 1 -> visitRepeatRollExpression(ctx);
+        case 2 -> visitRollExpressionWithConstantOp(ctx);
+        case 3 -> visitRollExpression(ctx.rollExpression(0)); // '(' rollExpression ')'
+        case 4, 5 -> visitComplexExpression(ctx);
+        case 6 -> visitRollExpressionBasis(ctx.simpleRoll());
         default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
       };
     }
 
+    private RepeatRollExpression visitRepeatRollExpression(CommandParser.RollExpressionContext ctx) {
+      final int num = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression());
+      final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
+      return new RepeatRollExpression(rollExpression, num);
+    }
+
     private ComplexRollExpression visitComplexExpression(CommandParser.RollExpressionContext ctx) {
-      final Operator operator;
-      if (ctx.PLUS() != null) {
-        operator = Operator.PLUS;
-      } else if (ctx.MINUS() != null) {
-        operator = Operator.MINUS;
-      } else if (ctx.TIMES() != null) {
-        operator = Operator.MULTIPLY;
-      } else if (ctx.DIVIDE() != null) {
-        operator = Operator.DIVIDE;
-      } else {
-        throw new UnsupportedOperationException(ctx.getText());
-      }
-      return new ComplexRollExpression(operator, visitRollExpression(ctx.rollExpression(0)), visitRollExpression(ctx.rollExpression(1)));
+      return new ComplexRollExpression(operator(ctx.op), visitRollExpression(ctx.rollExpression(0)), visitRollExpression(ctx.rollExpression(1)));
     }
 
     private RollExpression visitRollExpressionWithConstantOp(CommandParser.RollExpressionContext ctx) {
-      final Operator operator;
-      if (ctx.PLUS() != null) {
-        operator = Operator.PLUS;
-      } else if (ctx.MINUS() != null) {
-        operator = Operator.MINUS;
-      } else if (ctx.TIMES() != null) {
-        operator = Operator.MULTIPLY;
-      } else if (ctx.DIVIDE() != null) {
-        operator = Operator.DIVIDE;
-      } else {
-        throw new UnsupportedOperationException();
-      }
-
-      final int right = Integer.parseInt(ctx.NUMBER().getText());
       final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
-
-      return new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(right));
+      return visitUnaryConstantOp(rollExpression, ctx.unaryConstantOp());
     }
 
-    public RollExpression visitRollExpressionBasis(CommandParser.RollExpressionBasisContext ctx) {
+    @NotNull
+    private RollExpression visitUnaryConstantOp(RollExpression rollExpression, CommandParser.UnaryConstantOpContext ctx) {
+      final Operator operator = operator(ctx.op);
+      return switch(ctx.getAltNumber()) {
+        case 1 -> {
+          final int constValue = parseNumeric(ctx.numeric());
+          yield new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(constValue));
+        }
+        case 2, 3 -> {
+          final int rightValue = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression(1));
+          final RollExpression leftSubExpression =
+              new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(rightValue));
+
+          yield new ComplexRollExpression(operator(ctx.op2), leftSubExpression, new ConstantRollExpression(rightValue));
+        }
+        case 4 -> {
+          final int constValue = new ConstExpressionVisitor().evaluateConstExpression(ctx.constExpression(0));
+          yield new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(constValue));
+        }
+        default -> throw new UnsupportedOperationException(ctx.getText());
+      };
+    }
+
+    public RollExpression visitRollExpressionBasis(CommandParser.SimpleRollContext ctx) {
       final UniformDicePool[] uniformDicePools =
           ctx.DICE()
              .stream()
@@ -223,6 +214,44 @@ public class Parser {
 
       return new SimpleRollExpression(base, modifiers.rollModifiers, modifiers.resultAggregator);
     }
+  }
+
+  private static class ConstExpressionVisitor {
+    public int evaluateConstExpression(CommandParser.ConstExpressionContext ctx) {
+      return switch(ctx.getAltNumber()) {
+        case 1 -> parseNumeric(ctx.numeric());
+        case 2, 3 -> evaluateBinaryConstExpression(ctx);
+        default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
+      };
+    }
+
+    private int evaluateBinaryConstExpression(CommandParser.ConstExpressionContext ctx) {
+      final int left = evaluateConstExpression(ctx.constExpression(0));
+      final int right = evaluateConstExpression(ctx.constExpression(1));
+      final Operator op = operator(ctx.op);
+
+      return op.apply(left, right);
+    }
+
+  }
+
+  private static int parseNumeric(CommandParser.NumericContext ctx) {
+    try {
+      return Integer.parseInt(ctx.getText());
+    } catch (NumberFormatException nfe) {
+      throw new ParseCancellationException(nfe);
+    }
+  }
+
+  @NotNull
+  private static Operator operator(Token token) {
+    return switch(token.getType()) {
+      case CommandLexer.PLUS -> Operator.PLUS;
+      case CommandLexer.MINUS -> Operator.MINUS;
+      case CommandLexer.DIVIDE -> Operator.DIVIDE;
+      case CommandLexer.TIMES -> Operator.MULTIPLY;
+      default -> throw new UnsupportedOperationException(token.getText());
+    };
   }
 
   @RequiredArgsConstructor

@@ -47,15 +47,34 @@ roll
 
 // Set alt numbers manually as workaround for bug
 rollExpression
-    : rollExpressionBasis {_localctx.setAltNumber(1);}
-    | (NUMBER | REFERENCE) rollExpression {_localctx.setAltNumber(2);}
+    : constExpression rollExpression {_localctx.setAltNumber(1);}
+    | rollExpression unaryConstantOp {_localctx.setAltNumber(2);}
     | LB rollExpression RB {_localctx.setAltNumber(3);}
-    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) (NUMBER | REFERENCE) {_localctx.setAltNumber(4);}
-    | rollExpression (PLUS | MINUS | TIMES | DIVIDE) rollExpression {_localctx.setAltNumber(5);}
+    | rollExpression op=(DIVIDE|TIMES) rollExpression {_localctx.setAltNumber(4);}
+    | rollExpression op=(PLUS|MINUS) rollExpression {_localctx.setAltNumber(5);}
+    | simpleRoll {_localctx.setAltNumber(6);}
     ;
 
-rollExpressionBasis
-    : DICE (PLUS DICE)* modifiers?
+unaryConstantOp
+    : op=(TIMES|DIVIDE) numeric {_localctx.setAltNumber(1);}
+    | op=(TIMES|DIVIDE) constExpression op2=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(2);}
+    | op=(TIMES|DIVIDE) constExpression op2=(PLUS|MINUS) constExpression {_localctx.setAltNumber(3);}
+    | op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(4);}
+    ;
+
+constExpression
+    : numeric {_localctx.setAltNumber(1);}
+    | constExpression op=(DIVIDE|TIMES) constExpression {_localctx.setAltNumber(2);}
+    | constExpression op=(PLUS|MINUS) constExpression {_localctx.setAltNumber(3);}
+    ;
+
+numeric
+    : NUMBER
+    | REFERENCE
+    ;
+
+simpleRoll
+    : DICE ((PLUS DICE)* modifiers)?
     ;
 
 modifiers
