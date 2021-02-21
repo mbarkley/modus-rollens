@@ -47,8 +47,8 @@ public class Invoke implements Command {
     }, context.getExecutorService()).thenCompose(savedRoll -> {
       final String expressionWithArgs = getSubstitutedExpression(savedRoll);
 
-      final Optional<RollCommand> parsed = context.getParser().parseRoll(expressionWithArgs);
-      RollCommand rollCommand = parsed
+      final Optional<? extends Command> parsed = context.getParser().parseRoll(expressionWithArgs);
+      Command rollCommand = parsed
           .orElseThrow(() -> new InvalidExpressionException(
               format("Expression invalid after argument substitution: `%s`",
                      expressionWithArgs)));

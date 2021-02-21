@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static io.github.mbarkley.rollens.eval.OperationMapper.Op.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ParserTest {

@@ -232,7 +232,32 @@ public class RollTest {
                   "!mr (2d10 f2 t7 + 2) - 2",
                   """
                       Test User roll: `[2, 5]`
-                      Result: -1""")
+                      Result: -1"""),
+        arguments(new Random(1337),
+                  "!mr (d10 - 1) * 10 + d10",
+                  """
+                      Test User roll: `[2][5]`
+                      Result: 15"""),
+        arguments(new Random(1337),
+                  "!mr (d10 e2 - 1) * 10 + d10",
+                  """
+                      Test User roll: `[2][10], [5]`
+                      Result: 70"""),
+        arguments(new Random(1337),
+                  "!mr d10 * d10",
+                  """
+                      Test User roll: `[2][5]`
+                      Result: 10"""),
+        arguments(new Random(1337),
+                  "!mr d10 - d10",
+                  """
+                      Test User roll: `[2][5]`
+                      Result: -3"""),
+        arguments(new Random(1337),
+                  "!mr (d10 + 10) / d10",
+                  """
+                      Test User roll: `[2][5]`
+                      Result: 2""")
     );
   }
 }

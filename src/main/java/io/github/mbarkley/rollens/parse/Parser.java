@@ -3,10 +3,9 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.antlr.CommandLexer;
 import io.github.mbarkley.rollens.antlr.CommandParser;
 import io.github.mbarkley.rollens.antlr.CommandParserBaseVisitor;
-import io.github.mbarkley.rollens.dice.DicePool;
-import io.github.mbarkley.rollens.dice.UniformDicePool;
+import io.github.mbarkley.rollens.dice.*;
 import io.github.mbarkley.rollens.eval.*;
-import io.github.mbarkley.rollens.eval.OperationMapper.Op;
+import io.github.mbarkley.rollens.math.Operator;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,43 +136,60 @@ public class Parser {
 
     @Override
     public RollCommand visitRoll(CommandParser.RollContext ctx) {
-      return visitRollExpression(ctx.rollExpression());
+      return new RollCommand(new RollExpressionVisitor().visitRollExpression(ctx.rollExpression()));
     }
+  }
 
+  private static class RollExpressionVisitor extends CommandParserBaseVisitor<RollExpression> {
     @Override
-    public RollCommand visitRollExpression(CommandParser.RollExpressionContext ctx) {
+    public RollExpression visitRollExpression(CommandParser.RollExpressionContext ctx) {
       if (log.isTraceEnabled()) {
         log.trace("Visiting roll context: {}", ctx.getText());
       }
       return switch(ctx.getAltNumber()) {
         case 1 -> visitRollExpressionBasis(ctx.rollExpressionBasis());
-        case 2 -> visitRollExpression(ctx.rollExpression()); // LB rollExpression RB
+        case 2 -> visitRollExpression(ctx.rollExpression(0)); // LB rollExpression RB
         case 3 -> visitRollExpressionWithConstantOp(ctx);
+        case 4 -> {
+          final Operator operator;
+          if (ctx.PLUS() != null) {
+            operator = Operator.PLUS;
+          } else if (ctx.MINUS() != null) {
+            operator = Operator.MINUS;
+          } else if (ctx.TIMES() != null) {
+            operator = Operator.MULTIPLY;
+          } else if (ctx.DIVIDE() != null) {
+            operator = Operator.DIVIDE;
+          } else {
+            throw new UnsupportedOperationException(ctx.getText());
+          }
+          yield new ComplexRollExpression(operator, visitRollExpression(ctx.rollExpression(0)), visitRollExpression(ctx.rollExpression(1)));
+        }
         default -> throw new UnsupportedOperationException("" + ctx.getAltNumber() + ": " + ctx.getText());
       };
     }
 
-    private RollCommand visitRollExpressionWithConstantOp(CommandParser.RollExpressionContext ctx) {
-      final Op op;
+    private RollExpression visitRollExpressionWithConstantOp(CommandParser.RollExpressionContext ctx) {
+      final Operator operator;
       if (ctx.PLUS() != null) {
-        op = Op.PLUS;
+        operator = Operator.PLUS;
       } else if (ctx.MINUS() != null) {
-        op = Op.MINUS;
+        operator = Operator.MINUS;
       } else if (ctx.TIMES() != null) {
-        op = Op.MULTIPLY;
+        operator = Operator.MULTIPLY;
       } else if (ctx.DIVIDE() != null) {
-        op = Op.DIVIDE;
+        operator = Operator.DIVIDE;
       } else {
         throw new UnsupportedOperationException();
       }
 
       final int right = Integer.parseInt(ctx.NUMBER().getText());
-      final RollCommand cmd = visitRollExpression(ctx.rollExpression());
-      return cmd.withResultMapper(new OperationMapper(cmd.getResultMapper(), op, right));
+      final RollExpression rollExpression = visitRollExpression(ctx.rollExpression(0));
+
+      return new ComplexRollExpression(operator, rollExpression, new ConstantRollExpression(right));
     }
 
-    @NotNull
-    public RollCommand visitRollExpressionBasis(CommandParser.RollExpressionBasisContext ctx) {
+    public RollExpression visitRollExpressionBasis(CommandParser.RollExpressionBasisContext ctx) {
       final UniformDicePool[] uniformDicePools =
           ctx.DICE()
              .stream()
@@ -194,7 +210,7 @@ public class Parser {
       final DicePool base = new DicePool(uniformDicePools);
       final ModifierVisitor.Modifiers modifiers = new ModifierVisitor().visitModifiers(ctx.modifiers());
 
-      return new RollCommand(base, modifiers.rollModifiers, modifiers.resultMapper);
+      return new SimpleRollExpression(base, modifiers.rollModifiers, modifiers.resultAggregator);
     }
   }
 
@@ -204,7 +220,7 @@ public class Parser {
     @Data
     private static class Modifiers {
       List<RollModifier> rollModifiers = new ArrayList<>(2);
-      ResultMapper resultMapper = new SumMapper();
+      ResultAggregator resultAggregator = new SumAggregator();
     }
 
     @Override
@@ -217,20 +233,20 @@ public class Parser {
           final CommandParser.SuccessModifiersContext successCtx = ctx.successModifiers();
           if (successCtx.TNUM() != null) {
             int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
-            if (modifiers.resultMapper instanceof SuccessCountMapper) {
-              modifiers.resultMapper = ((SuccessCountMapper) modifiers.resultMapper)
+            if (modifiers.resultAggregator instanceof SuccessCountAggregator) {
+              modifiers.resultAggregator = ((SuccessCountAggregator) modifiers.resultAggregator)
                   .withSuccessThreshold(successThreshold);
             } else {
-              modifiers.resultMapper = new SuccessCountMapper(successThreshold, 0);
+              modifiers.resultAggregator = new SuccessCountAggregator(successThreshold, 0);
             }
           }
           if (successCtx.FNUM() != null) {
             int failureThreshold = Integer.parseInt(successCtx.FNUM().getText().substring(1));
-            if (modifiers.resultMapper instanceof SuccessCountMapper) {
-              modifiers.resultMapper = ((SuccessCountMapper) modifiers.resultMapper)
+            if (modifiers.resultAggregator instanceof SuccessCountAggregator) {
+              modifiers.resultAggregator = ((SuccessCountAggregator) modifiers.resultAggregator)
                   .withFailureThreshold(failureThreshold);
             } else {
-              modifiers.resultMapper = new SuccessCountMapper(Integer.MAX_VALUE, failureThreshold);
+              modifiers.resultAggregator = new SuccessCountAggregator(Integer.MAX_VALUE, failureThreshold);
             }
           }
         }

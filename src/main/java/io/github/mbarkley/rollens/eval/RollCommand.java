@@ -1,56 +1,41 @@
 package io.github.mbarkley.rollens.eval;
 
-import io.github.mbarkley.rollens.dice.DicePool;
+import io.github.mbarkley.rollens.dice.Output;
 import io.github.mbarkley.rollens.dice.PoolResult;
+import io.github.mbarkley.rollens.dice.RollExpression;
 import io.github.mbarkley.rollens.util.MessageUtil;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
 
 import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
-@RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
+@RequiredArgsConstructor
 public class RollCommand implements Command {
-  private final DicePool base;
-  private final List<RollModifier> rollModifiers;
-  @With
-  @Getter
-  private final ResultMapper resultMapper;
+  private final RollExpression rollExpression;
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    final Random rand = context.getRand();
-    final PoolResult[] baseResults = base.execute(rand);
+    final Output output = rollExpression.apply(context.getRand());
+    final String rollsDisplayString = buildRollsDisplayString(output);
     final Message message = context.getMessage();
     final String username = MessageUtil.getAuthorDisplayName(message);
 
-    final List<PoolResult[]> results = new ArrayList<>();
-    results.add(baseResults);
-
-    for (RollModifier rollModifier : rollModifiers) {
-      rollModifier.modify(rand, results);
-    }
-    final IntStream allRollValues = results.stream()
-                                           .flatMap(Arrays::stream)
-                                           .flatMapToInt(pr -> Arrays.stream(pr.getValues()));
-    final int value = resultMapper.mapResult(message, allRollValues);
-    final String rollDisplay = displayRollsString(results);
-
-    return CompletableFuture.completedFuture(format("%s roll: `%s`\nResult: %d", username, rollDisplay, value));
+    return completedFuture(format("%s roll: `%s`\nResult: %d", username, rollsDisplayString, output.getValue()));
   }
 
   @NotNull
-  private String displayRollsString(List<PoolResult[]> results) {
+  private String buildRollsDisplayString(Output output) {
     final StringBuilder sb = new StringBuilder();
+    List<List<PoolResult>> results = output.getResults();
     final String delimiter = ", ";
     for (var result : results) {
       for (var pr : result) {

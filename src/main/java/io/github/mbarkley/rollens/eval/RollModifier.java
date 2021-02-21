@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.Random;
 
 public interface RollModifier {
-  void modify(Random rand, List<PoolResult[]> results);
+  void modify(Random rand, List<List<PoolResult>> results);
 }

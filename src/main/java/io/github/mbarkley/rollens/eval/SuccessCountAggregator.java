@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.With;
-import net.dv8tion.jda.api.entities.Message;
 
 import java.util.stream.IntStream;
 
@@ -12,12 +11,12 @@ import java.util.stream.IntStream;
 @ToString
 @EqualsAndHashCode
 @With
-public class SuccessCountMapper implements ResultMapper {
+public class SuccessCountAggregator implements ResultAggregator {
   private final int successThreshold;
   private final int failureThreshold;
 
   @Override
-  public int mapResult(Message message, IntStream rawRolls) {
+  public int combineResult(IntStream rawRolls) {
 
     return rawRolls.map(value -> {
       if (value >= successThreshold) {

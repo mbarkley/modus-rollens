@@ -8,6 +8,7 @@ import lombok.ToString;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -18,28 +19,28 @@ public class ExplodingModifier implements RollModifier {
   private final int maxIterations;
 
   @Override
-  public void modify(Random rand, List<PoolResult[]> allResults) {
+  public void modify(Random rand, List<List<PoolResult>> allResults) {
     if (allResults.isEmpty()) {
       throw new IllegalArgumentException("Empty results");
     }
 
     int iterationCap = Math.min(maxIterations, MAX_ITERATION_CAP);
     for (int i = 0; i < iterationCap; i++) {
-      final PoolResult[] baseResults = allResults.get(allResults.size() - 1);
-      final PoolResult[] explodedResults =
-          Arrays.stream(baseResults)
-                .filter(pr -> !pr.isEmpty())
-                .map(baseResult -> new PoolResult(baseResult.getPool(),
-                                                  Arrays.stream(baseResult.getValues())
-                                                        .filter(value -> value >= explodingThreshold)
-                                                        .map(value -> baseResult
-                                                            .getPool()
-                                                            .rollSingle(rand))
-                                                        .toArray())
-                )
-                .toArray(PoolResult[]::new);
+      final List<PoolResult> baseResults = allResults.get(allResults.size() - 1);
+      final List<PoolResult> explodedResults =
+          baseResults.stream()
+                     .filter(pr -> !pr.isEmpty())
+                     .map(baseResult -> new PoolResult(baseResult.getPool(),
+                                                       Arrays.stream(baseResult.getValues())
+                                                             .filter(value -> value >= explodingThreshold)
+                                                             .map(value -> baseResult
+                                                                 .getPool()
+                                                                 .rollSingle(rand))
+                                                             .toArray())
+                     )
+                     .collect(Collectors.toList());
       allResults.add(explodedResults);
-      if (explodedResults.length == 0 || Arrays.stream(explodedResults).allMatch(PoolResult::isEmpty)) break;
+      if (explodedResults.size() == 0 || explodedResults.stream().allMatch(PoolResult::isEmpty)) break;
     }
   }
 }
