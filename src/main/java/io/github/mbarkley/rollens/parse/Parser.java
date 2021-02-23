@@ -278,15 +278,6 @@ public class Parser {
       if (ctx == null) {
         return new Modifiers();
       } else {
-        final long distinctModifiers = ctx.modifier()
-                                          .stream()
-                                          .mapToInt(RuleContextWithAltNum::getAltNumber)
-                                          .distinct()
-                                          .count();
-        if (distinctModifiers != ctx.modifier().size()) {
-          throw new ParseCancellationException();
-        }
-
         final Modifiers modifiers = new Modifiers();
         final List<CommandParser.ModifierContext> successCountModifiers =
             ctx.modifier()
@@ -297,11 +288,16 @@ public class Parser {
           final var builder = SuccessCountAggregator.builder()
                                                     .successThreshold(Integer.MAX_VALUE)
                                                     .failureThreshold(0);
+          boolean tnum = false, fnum = false;
           for (var modifier : successCountModifiers) {
             if (modifier.TNUM() != null) {
+              if (tnum) throw new ParseCancellationException();
               builder.successThreshold(parseNumeric(modifier.TNUM().getText().substring(1)));
+              tnum = true;
             } else if (modifier.FNUM() != null) {
+              if (fnum) throw new ParseCancellationException();
               builder.failureThreshold(parseNumeric(modifier.FNUM().getText().substring(1)));
+              fnum = true;
             } else {
               throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier.getText());
             }
@@ -317,11 +313,22 @@ public class Parser {
                .map(modifier -> switch (modifier.getAltNumber()) {
                  case 3 -> new ExplodingModifier(parseNumeric(modifier.ENUM().getText().substring(1)), 1);
                  case 4 -> new ExplodingModifier(parseNumeric(modifier.IENUM().getText().substring(2)), Integer.MAX_VALUE);
+                 case 5 -> new KeepHighestModifier(parseNumeric(modifier.KNUM().getText().substring(1)));
                  default -> throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier
                      .getText());
                })
+               .sorted()
                .collect(Collectors.toList())
         );
+
+        final long distinctModifiers = modifiers.getRollModifiers()
+                                                .stream()
+                                                .map(RollModifier::type)
+                                                .distinct()
+                                                .count();
+        if (distinctModifiers != modifiers.getRollModifiers().size()) {
+          throw new ParseCancellationException();
+        }
 
         return modifiers;
       }

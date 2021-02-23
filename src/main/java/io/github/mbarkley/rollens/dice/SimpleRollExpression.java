@@ -1,7 +1,6 @@
 package io.github.mbarkley.rollens.dice;
 
 import io.github.mbarkley.rollens.eval.ResultAggregator;
-import io.github.mbarkley.rollens.eval.RollModifier;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;

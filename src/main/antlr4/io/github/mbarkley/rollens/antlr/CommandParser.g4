@@ -91,4 +91,5 @@ modifier
     | FNUM {_localctx.setAltNumber(2);}
     | ENUM {_localctx.setAltNumber(3);}
     | IENUM {_localctx.setAltNumber(4);}
+    | KNUM {_localctx.setAltNumber(5);}
     ;

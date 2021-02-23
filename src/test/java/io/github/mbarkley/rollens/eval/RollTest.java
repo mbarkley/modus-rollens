@@ -194,6 +194,32 @@ public class RollTest {
                   """
                       Test User roll: `[2][1], [6][], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
                       Result: 48"""),
+        // keep highest
+        arguments(new Random(1337),
+                  "!mr 2d6 k1",
+                  """
+                      Test User roll: `[2]`
+                      Result: 2"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 k2",
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 k3",
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 k1 e1",
+                  """
+                      Test User roll: `[2], [6]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 e1 k1",
+                  """
+                      Test User roll: `[2], [6]`
+                      Result: 8"""),
         // exploding success count
         arguments(new Random(1337),
                   "!mr 2d10 t7 e5",

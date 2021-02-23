@@ -1,6 +1,5 @@
-package io.github.mbarkley.rollens.eval;
+package io.github.mbarkley.rollens.dice;
 
-import io.github.mbarkley.rollens.dice.PoolResult;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -17,6 +16,11 @@ public class ExplodingModifier implements RollModifier {
   public static final int MAX_ITERATION_CAP = 100;
   private final int explodingThreshold;
   private final int maxIterations;
+
+  @Override
+  public ModifierType type() {
+    return ModifierType.EXPLOSIVE;
+  }
 
   @Override
   public void modify(Random rand, List<List<PoolResult>> allResults) {

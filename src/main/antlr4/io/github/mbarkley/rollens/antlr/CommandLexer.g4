@@ -13,6 +13,8 @@ ENUM : 'e' VALUE;
 
 IENUM : 'ie' VALUE;
 
+KNUM : 'k' VALUE;
+
 // Arithmetic symbols
 TIMES : '*';
 

@@ -29,6 +29,11 @@ rolls by name for your Discord server.
 |`!mr 5d10 e10`| Roll five ten-sided dice but roll one additional die for each ten (sometimes called "exploding" dice).|
 |`!mr 5d10 ie10`| As above, but explode on tens indefinitely (capped at one-hundred times to prevent abuse).|
 
+#### Keeping and Dropping Dice
+| Command   | Meaning                  |
+|-----------|--------------------------|
+|`!mr 5d10 k3`| Roll five ten-sided dice, keep the three highest results.|
+
 ### Save Custom Rolls by Name
 Save rolls by name, with arguments (number of dice, number of sides of dice, etc.) that can be provided
 when the custom roll is used. Rolls are saved to a discord server; anyone in a server can see and use

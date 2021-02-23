@@ -27,6 +27,9 @@ public class Help implements Command {
           `!mr 5d10 e10`: Roll five ten-sided dice but roll one additional die for each ten (sometimes called "exploding" dice).
           `!mr 5d10 ie10`: As above, but explode on tens indefinitely (capped at one-hundred times to prevent abuse).
           
+          __Keeping and Dropping Dice__
+          `!mr 5d10 k3`: Roll five ten-sided dice, keep the three highest results.
+          
           __Save Custom Rolls__
           `!mr save (werewolf num diff) = {num}d10 t{diff} f1`: Save a roll called `werewolf`.
           `!mr save (werewolf num) = {num}d10 t6 f1`: Save a roll called `werewolf` that has a different number of inputs from the other saved roll.
