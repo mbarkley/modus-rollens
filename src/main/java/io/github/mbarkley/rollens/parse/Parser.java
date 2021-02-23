@@ -278,6 +278,15 @@ public class Parser {
       if (ctx == null) {
         return new Modifiers();
       } else {
+        final long distinctModifiers = ctx.modifier()
+                                          .stream()
+                                          .mapToInt(RuleContextWithAltNum::getAltNumber)
+                                          .distinct()
+                                          .count();
+        if (distinctModifiers != ctx.modifier().size()) {
+          throw new ParseCancellationException();
+        }
+
         final Modifiers modifiers = new Modifiers();
         final List<CommandParser.ModifierContext> successCountModifiers =
             ctx.modifier()
