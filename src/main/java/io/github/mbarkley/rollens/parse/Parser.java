@@ -240,9 +240,14 @@ public class Parser {
 
   }
 
-  private static int parseNumeric(CommandParser.NumericContext ctx) {
+  private static int parseNumeric(RuleContext ctx) {
+    final String text = ctx.getText();
+    return parseNumeric(text);
+  }
+
+  private static int parseNumeric(String text) {
     try {
-      return Integer.parseInt(ctx.getText());
+      return Integer.parseInt(text);
     } catch (NumberFormatException nfe) {
       throw new ParseCancellationException(nfe);
     }
@@ -273,42 +278,41 @@ public class Parser {
       if (ctx == null) {
         return new Modifiers();
       } else {
-        final Modifiers modifiers = visitModifiers(ctx.modifiers());
-        if (ctx.successModifiers() != null) {
-          final CommandParser.SuccessModifiersContext successCtx = ctx.successModifiers();
-          if (successCtx.TNUM() != null) {
-            int successThreshold = Integer.parseInt(successCtx.TNUM().getText().substring(1));
-            if (modifiers.resultAggregator instanceof SuccessCountAggregator) {
-              modifiers.resultAggregator = ((SuccessCountAggregator) modifiers.resultAggregator)
-                  .withSuccessThreshold(successThreshold);
+        final Modifiers modifiers = new Modifiers();
+        final List<CommandParser.ModifierContext> successCountModifiers =
+            ctx.modifier()
+               .stream()
+               .filter(m -> m.TNUM() != null || m.FNUM() != null)
+               .collect(Collectors.toList());
+        if (!successCountModifiers.isEmpty()) {
+          final var builder = SuccessCountAggregator.builder()
+                                                    .successThreshold(Integer.MAX_VALUE)
+                                                    .failureThreshold(0);
+          for (var modifier : successCountModifiers) {
+            if (modifier.TNUM() != null) {
+              builder.successThreshold(parseNumeric(modifier.TNUM().getText().substring(1)));
+            } else if (modifier.FNUM() != null) {
+              builder.failureThreshold(parseNumeric(modifier.FNUM().getText().substring(1)));
             } else {
-              modifiers.resultAggregator = new SuccessCountAggregator(successThreshold, 0);
+              throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier.getText());
             }
           }
-          if (successCtx.FNUM() != null) {
-            int failureThreshold = Integer.parseInt(successCtx.FNUM().getText().substring(1));
-            if (modifiers.resultAggregator instanceof SuccessCountAggregator) {
-              modifiers.resultAggregator = ((SuccessCountAggregator) modifiers.resultAggregator)
-                  .withFailureThreshold(failureThreshold);
-            } else {
-              modifiers.resultAggregator = new SuccessCountAggregator(Integer.MAX_VALUE, failureThreshold);
-            }
-          }
+
+          modifiers.setResultAggregator(builder.build());
         }
 
-        if (ctx.explosionModifiers() != null) {
-          final CommandParser.ExplosionModifiersContext explosionModifiersCtx = ctx.explosionModifiers();
-          final int explosionThreshold;
-          final int maxIterations;
-          if (explosionModifiersCtx.ENUM() != null) {
-            explosionThreshold = Integer.parseInt(explosionModifiersCtx.ENUM().getText().substring(1));
-            maxIterations = 1;
-          } else {
-            explosionThreshold = Integer.parseInt(explosionModifiersCtx.IENUM().getText().substring(2));
-            maxIterations = Integer.MAX_VALUE;
-          }
-          modifiers.rollModifiers.add(new ExplodingModifier(explosionThreshold, maxIterations));
-        }
+        modifiers.setRollModifiers(
+            ctx.modifier()
+               .stream()
+               .filter(m -> !(m.getAltNumber() == 1 || m.getAltNumber() == 2))
+               .map(modifier -> switch (modifier.getAltNumber()) {
+                 case 3 -> new ExplodingModifier(parseNumeric(modifier.ENUM().getText().substring(1)), 1);
+                 case 4 -> new ExplodingModifier(parseNumeric(modifier.IENUM().getText().substring(2)), Integer.MAX_VALUE);
+                 default -> throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier
+                     .getText());
+               })
+               .collect(Collectors.toList())
+        );
 
         return modifiers;
       }
