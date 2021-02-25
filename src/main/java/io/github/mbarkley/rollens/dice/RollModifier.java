@@ -15,9 +15,9 @@ public interface RollModifier extends Comparable<RollModifier> {
   }
 
   enum ModifierType {
-    DROP_LOW,
-    KEEP_HIGH,
     REROLL,
-    EXPLOSIVE
+    EXPLOSIVE,
+    DROP_LOW,
+    KEEP_HIGH
   }
 }

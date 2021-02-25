@@ -213,8 +213,8 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 5d10 k2 r1",
                   """
-                      Test User roll: `[10, 10, `~~`2, 3, 5`~~`], [9, 4, 5]`
-                      Result: 38"""),
+                      Test User roll: `[10, 10, `~~`5, 3, 2`~~`]`
+                      Result: 20"""),
         // keep highest
         arguments(new Random(1337),
                   "!mr 2d6 k1",
@@ -234,13 +234,13 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d6 k1 e1",
                   """
-                      Test User roll: `[2, `~~`1`~~`], [6]`
-                      Result: 8"""),
+                      Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
+                      Result: 6"""),
         arguments(new Random(1337),
                   "!mr 2d6 e1 k1",
                   """
-                      Test User roll: `[2, `~~`1`~~`], [6]`
-                      Result: 8"""),
+                      Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
+                      Result: 6"""),
         // drop lowest
         arguments(new Random(1337),
                   "!mr 2d6 d1",
@@ -255,23 +255,23 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d6 d2",
                   """
-                      Test User roll: `[`~~`1, 2`~~`]`
+                      Test User roll: `[`~~`2, 1`~~`]`
                       Result: 0"""),
         arguments(new Random(1337),
                   "!mr 2d6 d3",
                   """
-                      Test User roll: `[`~~`1, 2`~~`]`
+                      Test User roll: `[`~~`2, 1`~~`]`
                       Result: 0"""),
         arguments(new Random(1337),
                   "!mr 2d6 d1 e1",
                   """
-                      Test User roll: `[2, `~~`1`~~`], [6]`
-                      Result: 8"""),
+                      Test User roll: `[2, `~~`1`~~`], [6, 5]`
+                      Result: 13"""),
         arguments(new Random(1337),
                   "!mr 2d6 e1 d1",
                   """
-                      Test User roll: `[2, `~~`1`~~`], [6]`
-                      Result: 8"""),
+                      Test User roll: `[2, `~~`1`~~`], [6, 5]`
+                      Result: 13"""),
         // exploding success count
         arguments(new Random(1337),
                   "!mr 2d10 t7 e5",

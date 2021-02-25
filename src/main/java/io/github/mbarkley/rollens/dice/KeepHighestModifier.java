@@ -1,13 +1,10 @@
 package io.github.mbarkley.rollens.dice;
 
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -26,49 +23,55 @@ public class KeepHighestModifier implements RollModifier {
       throw new IllegalArgumentException("Empty results");
     }
 
-    final List<PoolResult> curResults = allResults.get(allResults.size() - 1);
-    curResults.forEach(pr -> Arrays.sort(pr.getValues()));
-    final List<List<Integer>> newResults = new ArrayList<>(curResults.size());
-    final List<int[]> dropped = new ArrayList<>(curResults.size());
-    curResults.forEach(pr -> newResults.add(new ArrayList<>(pr.getValues().length)));
-
-    int[] resultIndices = curResults.stream().mapToInt(pr -> pr.getValues().length - 1).toArray();
-    int bound = Math.min(keep, curResults.stream().mapToInt(pr -> pr.getValues().length).sum());
-    for (int kept = 0; kept < bound; kept++) {
-      int maxVal = 0;
-      int maxPoolIndex = -1;
-      for (int candidatePoolIndex = 0; candidatePoolIndex < resultIndices.length; candidatePoolIndex++) {
-        int candidateDieIndex = resultIndices[candidatePoolIndex];
-        if (candidateDieIndex < curResults.get(candidatePoolIndex).getValues().length) {
-          final int candidateValue = curResults.get(candidatePoolIndex).getValues()[candidateDieIndex];
-          if (candidateValue > maxVal) {
-            maxVal = candidateValue;
-            maxPoolIndex = candidatePoolIndex;
-            resultIndices[candidatePoolIndex] -= 1;
-          }
+    List<PoolTracker> poolTrackers = new ArrayList<>();
+    for (int k = 0; k < allResults.size(); k++) {
+      var prs = allResults.get(k);
+      for (int i = 0; i < prs.size(); i++) {
+        for (int j = 0; j < prs.get(i).getValues().length; j++) {
+          poolTrackers.add(new PoolTracker(new Location(k, i), prs.get(i).getValues()[j]));
         }
       }
-      newResults.get(maxPoolIndex).add(maxVal);
     }
-    for (int i = 0; i < resultIndices.length; i++) {
-      dropped.add(new int[resultIndices[i] + 1]);
-      System.arraycopy(curResults.get(i).getValues(),
-                       0,
-                       dropped.get(i),
-                       0,
-                       resultIndices[i] + 1);
-    }
+    poolTrackers.sort(Comparator.comparing(PoolTracker::getValue).reversed());
 
-    final List<PoolResult> updatedDicePools = new ArrayList<>(newResults.size());
-    for (int i = 0; i < curResults.size(); i++) {
-      updatedDicePools.add(new PoolResult(curResults.get(i).getPool(),
-                                          dropped.get(i),
-                                          newResults.get(i)
-                                                    .stream()
-                                                    .mapToInt(Integer::intValue)
-                                                    .toArray()));
-    }
+    poolTrackers.stream()
+                .limit(Math.max(keep, 0))
+                .forEach(pt -> pt.kept = true);
 
-    allResults.set(allResults.size() - 1, updatedDicePools);
+    final Map<Location, List<PoolTracker>> grouped = poolTrackers.stream()
+                                                                 .collect(Collectors.groupingBy(pt -> pt.location));
+
+    for (var entry : grouped.entrySet()) {
+      final Location loc = entry.getKey();
+      final List<PoolTracker> trackers = entry.getValue();
+      final int[] values = trackers.stream()
+                                   .filter(pt -> pt.kept)
+                                   .mapToInt(pt -> pt.value)
+                                   .toArray();
+      final PoolResult poolResult = allResults.get(loc.topLevelIndex).get(loc.poolResultIndex);
+      final int[] dropped = IntStream.concat(
+          Arrays.stream(poolResult.getDropped()),
+          trackers.stream()
+                  .filter(pt -> !pt.kept)
+                  .mapToInt(pt -> pt.value)
+      ).toArray();
+
+      allResults.get(loc.topLevelIndex).set(loc.poolResultIndex, new PoolResult(poolResult.getPool(), dropped, values));
+    }
+  }
+
+  @Data
+  @RequiredArgsConstructor
+  private static class PoolTracker {
+    final Location location;
+    final int value;
+    boolean kept = false;
+  }
+
+  @Value
+  @EqualsAndHashCode
+  private static class Location {
+    int topLevelIndex;
+    int poolResultIndex;
   }
 }
