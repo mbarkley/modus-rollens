@@ -197,7 +197,7 @@ public class Parser {
 
     public RollExpression visitRollExpressionBasis(CommandParser.SimpleRollContext ctx) {
       final UniformDicePool[] uniformDicePools =
-          ctx.DICE()
+          ctx.dice()
              .stream()
              .map(ParseTree::getText)
              .map(DICE::matcher)
@@ -314,6 +314,7 @@ public class Parser {
                  case 3 -> new ExplodingModifier(parseNumeric(modifier.ENUM().getText().substring(1)), 1);
                  case 4 -> new ExplodingModifier(parseNumeric(modifier.IENUM().getText().substring(2)), Integer.MAX_VALUE);
                  case 5 -> new KeepHighestModifier(parseNumeric(modifier.KNUM().getText().substring(1)));
+                 case 6 -> new DropLowestModifier(parseNumeric(modifier.DNUM().getText().substring(1)));
                  default -> throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier
                      .getText());
                })

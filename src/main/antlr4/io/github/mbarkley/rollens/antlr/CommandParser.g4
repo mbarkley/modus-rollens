@@ -79,7 +79,12 @@ simpleRoll
     // Make sure we can't parse strings like `2d6 + 1d10` with this pattern
     // Only parse sums of dice as single term if there are modifiers (ex. `d6 + d4 e4`)
     // Otherwise we break precedence of operations
-    : DICE ((PLUS DICE)* modifiers)?
+    : dice ((PLUS dice)* modifiers)?
+    ;
+
+dice
+    : DICE
+    | DNUM
     ;
 
 modifiers
@@ -92,4 +97,5 @@ modifier
     | ENUM {_localctx.setAltNumber(3);}
     | IENUM {_localctx.setAltNumber(4);}
     | KNUM {_localctx.setAltNumber(5);}
+    | DNUM {_localctx.setAltNumber(6);}
     ;

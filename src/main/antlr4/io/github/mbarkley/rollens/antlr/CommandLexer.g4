@@ -15,6 +15,8 @@ IENUM : 'ie' VALUE;
 
 KNUM : 'k' VALUE;
 
+DNUM : 'd' VALUE;
+
 // Arithmetic symbols
 TIMES : '*';
 

@@ -29,6 +29,7 @@ public class Help implements Command {
           
           __Keeping and Dropping Dice__
           `!mr 5d10 k3`: Roll five ten-sided dice, keep the three highest results.
+          `!mr 5d10 d3`: Roll five ten-sided dice, drop the lowest three results.
           
           __Save Custom Rolls__
           `!mr save (werewolf num diff) = {num}d10 t{diff} f1`: Save a roll called `werewolf`.
