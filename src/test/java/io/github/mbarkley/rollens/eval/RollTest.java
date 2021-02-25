@@ -210,6 +210,11 @@ public class RollTest {
                   """
                       Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
                       Result: 11"""),
+        arguments(new Random(1337),
+                  "!mr 5d10 k2 r1",
+                  """
+                      Test User roll: `[10, 10, `~~`2, 3, 5`~~`], [9, 4, 5]`
+                      Result: 38"""),
         // keep highest
         arguments(new Random(1337),
                   "!mr 2d6 k1",

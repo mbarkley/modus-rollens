@@ -14,7 +14,7 @@ public class UniformDicePool {
     final int[] values = IntStream.generate(() -> rollSingle(rand))
                                   .limit(numberOfDice)
                                   .toArray();
-    return new PoolResult(this, values);
+    return new PoolResult(this, new int[0], values);
   }
 
   public int rollSingle(Random rand) {

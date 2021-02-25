@@ -35,6 +35,7 @@ public class ExplodingModifier implements RollModifier {
           baseResults.stream()
                      .filter(pr -> !pr.isEmpty())
                      .map(baseResult -> new PoolResult(baseResult.getPool(),
+                                                       new int[0],
                                                        Arrays.stream(baseResult.getValues())
                                                              .filter(value -> value >= explodingThreshold)
                                                              .map(value -> baseResult

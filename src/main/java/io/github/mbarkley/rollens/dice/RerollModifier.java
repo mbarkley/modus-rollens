@@ -31,16 +31,17 @@ public class RerollModifier implements RollModifier {
     for (List<PoolResult> poolResults : allResults) {
       for (int j = 0; j < poolResults.size(); j++) {
         PoolResult poolResult = poolResults.get(j);
-        final int[] dropped = Arrays.stream(poolResult.getValues())
-                                    .filter(n -> n <= threshold)
-                                    .toArray();
+        final int[] dropped = IntStream.concat(Arrays.stream(poolResult.getValues())
+                                                     .filter(n -> n <= threshold),
+                                               Arrays.stream(poolResult.getDropped()))
+                                       .toArray();
         final int[] values = Arrays.stream(poolResult.getValues())
                                    .filter(n -> n > threshold)
                                    .toArray();
         final int[] rerolls = IntStream.generate(() -> poolResult.getPool().rollSingle(rand))
                                        .limit(dropped.length)
                                        .toArray();
-        if (rerolls.length > 0) newRolls.add(new PoolResult(poolResult.getPool(), rerolls));
+        if (rerolls.length > 0) newRolls.add(new PoolResult(poolResult.getPool(), new int[0], rerolls));
         poolResults.set(j, new PoolResult(poolResult.getPool(), dropped, values));
       }
     }

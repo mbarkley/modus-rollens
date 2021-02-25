@@ -10,18 +10,11 @@ import static java.lang.String.format;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
+@Getter
 public class PoolResult {
-  @Getter
   private final UniformDicePool pool;
   private final int[] dropped;
-  @Getter
   private final int[] values;
-
-  public PoolResult(UniformDicePool pool, int... values) {
-    this.pool = pool;
-    this.values = values;
-    this.dropped = new int[0];
-  }
 
   public void writeString(String strikethroughMarker, StringBuilder sb) {
     sb.append("[");
@@ -62,7 +55,9 @@ public class PoolResult {
       final int totalNumDice = left.getPool().getNumberOfDice() + right.getPool().getNumberOfDice();
       final int[] allValues = Arrays.copyOf(left.getValues(), left.getValues().length + right.getValues().length);
       System.arraycopy(right.getValues(), 0, allValues, left.getValues().length, right.getValues().length);
-      return new PoolResult(new UniformDicePool(totalNumDice, left.getPool().getNumberOfSides()), allValues);
+      final int[] allDropped = Arrays.copyOf(left.dropped, left.dropped.length + right.dropped.length);
+      System.arraycopy(right.dropped, 0, allDropped, left.dropped.length, right.dropped.length);
+      return new PoolResult(new UniformDicePool(totalNumDice, left.getPool().getNumberOfSides()), allDropped, allValues);
     } else {
       throw new IllegalArgumentException(format("Dice sides don't match for arguments [%s] and [%s]", left.getPool(), right.getPool()));
     }
