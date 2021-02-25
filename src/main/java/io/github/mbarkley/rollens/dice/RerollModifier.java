@@ -45,6 +45,6 @@ public class RerollModifier implements RollModifier {
       }
     }
 
-    allResults.add(newRolls);
+    if (!newRolls.isEmpty()) allResults.add(newRolls);
   }
 }
