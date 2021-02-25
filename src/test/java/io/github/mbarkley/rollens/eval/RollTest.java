@@ -194,11 +194,27 @@ public class RollTest {
                   """
                       Test User roll: `[2][1], [6][], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
                       Result: 48"""),
+        // re-roll low dice
+        arguments(new Random(1337),
+                  "!mr 2d6 r1",
+                  """
+                      Test User roll: `[2, `~~`1`~~`], [6]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr d6 + d6 r1",
+                  """
+                      Test User roll: `[2][`~~`1`~~`], [6]`
+                      Result: 8"""),
+        arguments(new Random(1337),
+                  "!mr d6 + d6 r2",
+                  """
+                      Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
+                      Result: 11"""),
         // keep highest
         arguments(new Random(1337),
                   "!mr 2d6 k1",
                   """
-                      Test User roll: `[2]`
+                      Test User roll: `[2, `~~`1`~~`]`
                       Result: 2"""),
         arguments(new Random(1337),
                   "!mr 2d6 k2",
@@ -213,18 +229,18 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d6 k1 e1",
                   """
-                      Test User roll: `[2], [6]`
+                      Test User roll: `[2, `~~`1`~~`], [6]`
                       Result: 8"""),
         arguments(new Random(1337),
                   "!mr 2d6 e1 k1",
                   """
-                      Test User roll: `[2], [6]`
+                      Test User roll: `[2, `~~`1`~~`], [6]`
                       Result: 8"""),
         // drop lowest
         arguments(new Random(1337),
                   "!mr 2d6 d1",
                   """
-                      Test User roll: `[2]`
+                      Test User roll: `[2, `~~`1`~~`]`
                       Result: 2"""),
         arguments(new Random(1337),
                   "!mr 2d6 d0",
@@ -234,22 +250,22 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 2d6 d2",
                   """
-                      Test User roll: `[]`
+                      Test User roll: `[`~~`1, 2`~~`]`
                       Result: 0"""),
         arguments(new Random(1337),
                   "!mr 2d6 d3",
                   """
-                      Test User roll: `[]`
+                      Test User roll: `[`~~`1, 2`~~`]`
                       Result: 0"""),
         arguments(new Random(1337),
                   "!mr 2d6 d1 e1",
                   """
-                      Test User roll: `[2], [6]`
+                      Test User roll: `[2, `~~`1`~~`], [6]`
                       Result: 8"""),
         arguments(new Random(1337),
                   "!mr 2d6 e1 d1",
                   """
-                      Test User roll: `[2], [6]`
+                      Test User roll: `[2, `~~`1`~~`], [6]`
                       Result: 8"""),
         // exploding success count
         arguments(new Random(1337),

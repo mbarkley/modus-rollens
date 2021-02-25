@@ -1,34 +1,54 @@
 package io.github.mbarkley.rollens.dice;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 
 import static java.lang.String.format;
 
-@Value
+@RequiredArgsConstructor
+@EqualsAndHashCode
 public class PoolResult {
-  UniformDicePool pool;
-  int[] values;
+  @Getter
+  private final UniformDicePool pool;
+  private final int[] dropped;
+  @Getter
+  private final int[] values;
 
-  public void writeString(StringBuilder sb) {
-    sb.append('[');
+  public PoolResult(UniformDicePool pool, int... values) {
+    this.pool = pool;
+    this.values = values;
+    this.dropped = new int[0];
+  }
+
+  public void writeString(String strikethroughMarker, StringBuilder sb) {
+    sb.append("[");
     final String delimiter = ", ";
     for (var value : values) {
       sb.append(value)
         .append(delimiter);
     }
-    if (values.length > 0) {
+    if (dropped.length > 0) {
+      sb.append(strikethroughMarker);
+      for (var value : dropped) {
+        sb.append(value)
+          .append(delimiter);
+      }
+      sb.replace(sb.length() - delimiter.length(), sb.length(), strikethroughMarker)
+        .append(']');
+    } else if (values.length > 0) {
       sb.replace(sb.length() - delimiter.length(), sb.length(), "]");
     } else {
-      sb.append(']');
+      sb.append("]");
     }
   }
 
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder();
-    writeString(sb);
+    writeString("~~", sb);
 
     return sb.toString();
   }

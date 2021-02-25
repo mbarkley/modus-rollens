@@ -39,7 +39,7 @@ public class RollCommand implements Command {
     final String delimiter = ", ";
     for (var result : results) {
       for (var pr : result) {
-        pr.writeString(sb);
+        pr.writeString("`~~`", sb);
       }
       sb.append(delimiter);
     }

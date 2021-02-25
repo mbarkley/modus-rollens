@@ -29,6 +29,7 @@ public class KeepHighestModifier implements RollModifier {
     final List<PoolResult> curResults = allResults.get(allResults.size() - 1);
     curResults.forEach(pr -> Arrays.sort(pr.getValues()));
     final List<List<Integer>> newResults = new ArrayList<>(curResults.size());
+    final List<int[]> dropped = new ArrayList<>(curResults.size());
     curResults.forEach(pr -> newResults.add(new ArrayList<>(pr.getValues().length)));
 
     int[] resultIndices = curResults.stream().mapToInt(pr -> pr.getValues().length - 1).toArray();
@@ -49,10 +50,19 @@ public class KeepHighestModifier implements RollModifier {
       }
       newResults.get(maxPoolIndex).add(maxVal);
     }
+    for (int i = 0; i < resultIndices.length; i++) {
+      dropped.add(new int[resultIndices[i] + 1]);
+      System.arraycopy(curResults.get(i).getValues(),
+                       0,
+                       dropped.get(i),
+                       0,
+                       resultIndices[i] + 1);
+    }
 
     final List<PoolResult> updatedDicePools = new ArrayList<>(newResults.size());
     for (int i = 0; i < curResults.size(); i++) {
       updatedDicePools.add(new PoolResult(curResults.get(i).getPool(),
+                                          dropped.get(i),
                                           newResults.get(i)
                                                     .stream()
                                                     .mapToInt(Integer::intValue)

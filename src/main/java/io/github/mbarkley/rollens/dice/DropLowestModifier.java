@@ -4,7 +4,9 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode
@@ -19,10 +21,14 @@ public class DropLowestModifier implements RollModifier {
 
   @Override
   public void modify(Random rand, List<List<PoolResult>> allResults) {
-    final int numberOfDice = allResults.stream()
-                                       .flatMap(Collection::stream)
-                                       .mapToInt(pr -> pr.getValues().length)
-                                       .sum();
-    new KeepHighestModifier(numberOfDice - drop).modify(rand, allResults);
+    if (allResults.isEmpty()) {
+      throw new IllegalArgumentException("empty results");
+    }
+    final int numDice = allResults.stream()
+                                  .flatMap(Collection::stream)
+                                  .mapToInt(pr -> pr.getValues().length)
+                                  .sum();
+
+    new KeepHighestModifier(numDice - drop).modify(rand, allResults);
   }
 }

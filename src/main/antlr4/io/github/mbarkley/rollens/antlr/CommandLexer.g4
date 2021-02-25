@@ -17,6 +17,8 @@ KNUM : 'k' VALUE;
 
 DNUM : 'd' VALUE;
 
+RNUM : 'r' VALUE;
+
 // Arithmetic symbols
 TIMES : '*';
 

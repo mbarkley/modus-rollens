@@ -28,6 +28,7 @@ rolls by name for your Discord server.
 |-----------|--------------------------|
 |`!mr 5d10 e10`| Roll five ten-sided dice but roll one additional die for each ten (sometimes called "exploding" dice).|
 |`!mr 5d10 ie10`| As above, but explode on tens indefinitely (capped at one-hundred times to prevent abuse).|
+|`!mr 5d10 r3`| Roll five ten-sided dice, take any results less than or equal to three, and re-roll them once.|
 
 #### Keeping and Dropping Dice
 | Command   | Meaning                  |
