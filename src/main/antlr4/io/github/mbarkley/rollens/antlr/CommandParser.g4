@@ -100,4 +100,5 @@ modifier
     | DNUM {_localctx.setAltNumber(6);}
     | RNUM {_localctx.setAltNumber(7);}
     | IRNUM {_localctx.setAltNumber(8);}
+    | KLNUM {_localctx.setAltNumber(9);}
     ;

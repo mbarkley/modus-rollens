@@ -213,7 +213,7 @@ public class RollTest {
         arguments(new Random(1337),
                   "!mr 5d10 k2 r1",
                   """
-                      Test User roll: `[10, 10, `~~`5, 3, 2`~~`]`
+                      Test User roll: `[10, 10, `~~`2, 5, 3`~~`]`
                       Result: 20"""),
         arguments(new Random(1337),
                   "!mr d6 ir2",
@@ -256,6 +256,32 @@ public class RollTest {
                   """
                       Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
                       Result: 6"""),
+        // keep lowest
+        arguments(new Random(1337),
+                  "!mr 2d6 kl1",
+                  """
+                      Test User roll: `[1, `~~`2`~~`]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 kl2",
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 kl3",
+                  """
+                      Test User roll: `[2, 1]`
+                      Result: 3"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 kl1 e1",
+                  """
+                      Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
+                      Result: 1"""),
+        arguments(new Random(1337),
+                  "!mr 2d6 e1 kl1",
+                  """
+                      Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
+                      Result: 1"""),
         // drop lowest
         arguments(new Random(1337),
                   "!mr 2d6 d1",

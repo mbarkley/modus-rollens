@@ -36,6 +36,7 @@ rolls by name for your Discord server.
 |-----------|--------------------------|
 |`!mr 5d10 k3`| Roll five ten-sided dice, keep the three highest results.|
 |`!mr 5d10 d3`| Roll five ten-sided dice, drop the lowest three results.|
+|`!mr 5d10 kl3`| Roll five ten-sided dice, keep the three lowest results.|
 
 ### Save Custom Rolls by Name
 Save rolls by name, with arguments (number of dice, number of sides of dice, etc.) that can be provided

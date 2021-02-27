@@ -15,6 +15,8 @@ IENUM : 'ie' VALUE;
 
 KNUM : 'k' VALUE;
 
+KLNUM : 'kl' VALUE;
+
 DNUM : 'd' VALUE;
 
 RNUM : 'r' VALUE;

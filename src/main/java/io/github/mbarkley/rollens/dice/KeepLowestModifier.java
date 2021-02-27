@@ -10,15 +10,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @ToString
-public class KeepHighestModifier extends KeepModifier {
+public class KeepLowestModifier extends KeepModifier {
   private final int keep;
 
   @Override
-  protected void markKept(List<PoolTracker> poolTrackers) {
+  protected void markKept(List<KeepModifier.PoolTracker> poolTrackers) {
     poolTrackers.stream()
-                .sorted(Comparator.comparing(PoolTracker::getValue).reversed())
+                .sorted(Comparator.comparing(KeepModifier.PoolTracker::getValue))
                 .limit(Math.max(keep, 0))
                 .forEach(pt -> pt.kept = true);
   }
-
 }

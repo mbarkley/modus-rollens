@@ -317,6 +317,7 @@ public class Parser {
                  case 6 -> new DropLowestModifier(parseNumeric(modifier.DNUM().getText().substring(1)));
                  case 7 -> new RerollModifier(parseNumeric(modifier.RNUM().getText().substring(1)), 1);
                  case 8 -> new RerollModifier(parseNumeric(modifier.IRNUM().getText().substring(2)), Integer.MAX_VALUE);
+                 case 9 -> new KeepLowestModifier(parseNumeric(modifier.KLNUM().getText().substring(2)));
                  default -> throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier
                      .getText());
                })
