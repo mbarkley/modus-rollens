@@ -95,7 +95,8 @@ public class ParserTest {
         arguments("!mr {n}d6"),
         arguments("!mr 2d6 e4 e4"),
         arguments("!mr 2d6 t4 t4"),
-        arguments("!mr 2d6 e4 ie4")
+        arguments("!mr 2d6 e4 ie4"),
+        arguments("!mr 2d6 r4 ir4")
     );
   }
 

@@ -99,4 +99,5 @@ modifier
     | KNUM {_localctx.setAltNumber(5);}
     | DNUM {_localctx.setAltNumber(6);}
     | RNUM {_localctx.setAltNumber(7);}
+    | IRNUM {_localctx.setAltNumber(8);}
     ;

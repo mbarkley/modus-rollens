@@ -27,6 +27,7 @@ public class Help implements Command {
           `!mr 5d10 e10`: Roll five ten-sided dice but roll one additional die for each ten (sometimes called "exploding" dice).
           `!mr 5d10 ie10`: As above, but explode on tens indefinitely (capped at one-hundred times to prevent abuse).
           `!mr 5d10 r3`: Roll five ten-sided dice, take any results less than or equal to three, and re-roll them once.
+          `!mr 5d10 ir3`: Roll five ten-sided dice, take any results less than or equal to three and continue re-rolling them (capped at one-hundred times to prevent abuse).
           
           __Keeping and Dropping Dice__
           `!mr 5d10 k3`: Roll five ten-sided dice, keep the three highest results.

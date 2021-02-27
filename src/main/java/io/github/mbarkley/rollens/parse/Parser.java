@@ -315,7 +315,8 @@ public class Parser {
                  case 4 -> new ExplodingModifier(parseNumeric(modifier.IENUM().getText().substring(2)), Integer.MAX_VALUE);
                  case 5 -> new KeepHighestModifier(parseNumeric(modifier.KNUM().getText().substring(1)));
                  case 6 -> new DropLowestModifier(parseNumeric(modifier.DNUM().getText().substring(1)));
-                 case 7 -> new RerollModifier(parseNumeric(modifier.RNUM().getText().substring(1)));
+                 case 7 -> new RerollModifier(parseNumeric(modifier.RNUM().getText().substring(1)), 1);
+                 case 8 -> new RerollModifier(parseNumeric(modifier.IRNUM().getText().substring(2)), Integer.MAX_VALUE);
                  default -> throw new UnsupportedOperationException("" + modifier.getAltNumber() + ": " + modifier
                      .getText());
                })
