@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -43,7 +44,7 @@ public class Bot extends ListenerAdapter {
               } else {
                 log.info("Executing user/command=[{}/{}]", message.getAuthor().getId(), command);
               }
-              command.execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom.current(), message))
+              command.execute(new Command.ExecutionContext(executorService, jdbi, parser, new Random(), message))
                      .whenComplete((responseText, ex) -> {
                        if (ex != null) {
                          log.warn("Encountered error for message.id={}: {}", message.getId(), ex.getMessage());
