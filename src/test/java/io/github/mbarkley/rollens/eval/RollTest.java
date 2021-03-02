@@ -61,7 +61,7 @@ public class RollTest {
   public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException {
     final Optional<Command> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, rand, testMessage);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testMessage);
     final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
@@ -75,7 +75,7 @@ public class RollTest {
     testMessage.setGuild(null);
     final Optional<Command> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, rand, testMessage);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testMessage);
     final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");

@@ -61,7 +61,7 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testMessage);
 
     // do saves
     final CompletableFuture[] futures = saves.stream()
@@ -104,7 +104,7 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testMessage);
     final CompletableFuture[] futures = saves.stream()
                                              .map(save -> save.execute(context))
                                              .toArray(CompletableFuture[]::new);
@@ -128,7 +128,7 @@ public class EvalTest {
     final Save secondSave = new Save("foo1",
                              List.of("a"),
                              "{a}d10");
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testMessage);
     firstSave.execute(context)
              .thenCompose(output -> secondSave.execute(context))
              .get(5, TimeUnit.SECONDS);
@@ -146,7 +146,7 @@ public class EvalTest {
     // Setup
     save_and_list_in_guild_should_show_all_saved();
     testMessage.setGuild(new TestGuild(321));
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testMessage);
     final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
@@ -159,7 +159,7 @@ public class EvalTest {
   @ParameterizedTest(name = "invoking \"{0}\" should have failure message \"{1}\"")
   public void should_invoke_saved_roll_in_guild(Command command, String result) throws InterruptedException, ExecutionException, TimeoutException {
     testMessage.setGuild(null);
-    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, new Random(1337), testMessage);
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testMessage);
     final String observed = command.execute(context).get(1, TimeUnit.SECONDS);
     Assertions.assertEquals(result, observed);
   }
@@ -167,7 +167,7 @@ public class EvalTest {
   @MethodSource("invocations")
   @ParameterizedTest(name = "invoking \"{2}\" should have result \"{3}\"")
   public void should_invoke_saved_roll_in_guild(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
-    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, rand, testMessage);
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testMessage);
     // setup
     save.execute(context).get(1, TimeUnit.SECONDS);
     // test
