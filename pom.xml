@@ -13,8 +13,10 @@
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
         <lombok.version>1.18.18</lombok.version>
+        <antlr4.version>4.9.1</antlr4.version>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.listener>true</antlr4.listener>
+        <jda.version>4.3.0_331</jda.version>
     </properties>
 
     <dependencyManagement>
@@ -26,6 +28,11 @@
                 <version>3.18.0</version>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr4.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -33,7 +40,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>4.2.0_228</version>
+            <version>${jda.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -50,7 +57,6 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <version>4.9.1</version>
         </dependency>
         <dependency>
             <groupId>org.jdbi</groupId>
@@ -115,7 +121,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.9.1</version>
+                <version>${antlr4.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -160,6 +166,11 @@
             <id>jcenter</id>
             <name>jcenter-bintray</name>
             <url>https://jcenter.bintray.com</url>
+        </repository>
+        <repository>
+            <id>dv8tion</id>
+            <name>m2-dv8tion</name>
+            <url>https://m2.dv8tion.net/releases</url>
         </repository>
     </repositories>
 

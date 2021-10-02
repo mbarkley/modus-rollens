@@ -4,13 +4,14 @@ import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Region;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.templates.Template;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.managers.GuildManager;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.requests.restaction.ChannelAction;
-import net.dv8tion.jda.api.requests.restaction.MemberAction;
-import net.dv8tion.jda.api.requests.restaction.RoleAction;
+import net.dv8tion.jda.api.requests.restaction.*;
 import net.dv8tion.jda.api.requests.restaction.order.CategoryOrderAction;
 import net.dv8tion.jda.api.requests.restaction.order.ChannelOrderAction;
 import net.dv8tion.jda.api.requests.restaction.order.RoleOrderAction;
@@ -29,6 +30,66 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class TestGuild implements Guild {
   private final long id;
+
+  @NotNull
+  @Override
+  public RestAction<List<Command>> retrieveCommands() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<Command> retrieveCommandById(@NotNull String s) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public CommandCreateAction upsertCommand(@NotNull CommandData commandData) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public CommandListUpdateAction updateCommands() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public CommandEditAction editCommandById(@NotNull String s) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<Void> deleteCommandById(@NotNull String s) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<List<CommandPrivilege>> retrieveCommandPrivilegesById(@NotNull String s) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<Map<String, List<CommandPrivilege>>> retrieveCommandPrivileges() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<List<CommandPrivilege>> updateCommandPrivilegesById(@NotNull String s, @NotNull Collection<? extends CommandPrivilege> collection) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<Map<String, List<CommandPrivilege>>> updateCommandPrivileges(@NotNull Map<String, Collection<? extends CommandPrivilege>> map) {
+    throw new UnsupportedOperationException();
+  }
 
   @NotNull
   @Override
@@ -98,6 +159,12 @@ public class TestGuild implements Guild {
     throw new UnsupportedOperationException();
   }
 
+  @NotNull
+  @Override
+  public RestAction<VanityInvite> retrieveVanityInvite() {
+    throw new UnsupportedOperationException();
+  }
+
   @Nullable
   @Override
   public String getDescription() {
@@ -163,6 +230,18 @@ public class TestGuild implements Guild {
 
   @Nullable
   @Override
+  public TextChannel getRulesChannel() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
+  public TextChannel getCommunityUpdatesChannel() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
   public Member getOwner() {
     throw new UnsupportedOperationException();
   }
@@ -192,6 +271,12 @@ public class TestGuild implements Guild {
   @NotNull
   @Override
   public Member getSelfMember() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public NSFWLevel getNSFWLevel() {
     throw new UnsupportedOperationException();
   }
 
@@ -329,6 +414,18 @@ public class TestGuild implements Guild {
 
   @NotNull
   @Override
+  public Task<Void> requestToSpeak() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public Task<Void> cancelRequestToSpeak() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
   public JDA getJDA() {
     throw new UnsupportedOperationException();
   }
@@ -336,6 +433,18 @@ public class TestGuild implements Guild {
   @NotNull
   @Override
   public RestAction<List<Invite>> retrieveInvites() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<List<Template>> retrieveTemplates() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RestAction<Template> createTemplate(@NotNull String s, @Nullable String s1) {
     throw new UnsupportedOperationException();
   }
 
@@ -514,6 +623,12 @@ public class TestGuild implements Guild {
   @NotNull
   @Override
   public ChannelAction<VoiceChannel> createVoiceChannel(@NotNull String name, @Nullable Category parent) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public ChannelAction<StageChannel> createStageChannel(@NotNull String s, @Nullable Category category) {
     throw new UnsupportedOperationException();
   }
 

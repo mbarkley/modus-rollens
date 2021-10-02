@@ -20,6 +20,11 @@ public class TestMember implements Member {
   @Getter
   private String nickname;
 
+  @Override
+  public boolean isPending() {
+    throw new UnsupportedOperationException();
+  }
+
   @NotNull
   @Override
   public User getUser() {
@@ -185,11 +190,6 @@ public class TestMember implements Member {
   @Nullable
   @Override
   public TextChannel getDefaultChannel() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean isFake() {
     throw new UnsupportedOperationException();
   }
 
