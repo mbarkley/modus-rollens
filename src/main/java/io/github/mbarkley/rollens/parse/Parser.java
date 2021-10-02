@@ -33,7 +33,8 @@ public class Parser {
       final CommandParser.CommandContext commandContext = parser.command();
       final CommandParserVisitor visitor = new CommandParserVisitor(parser.getTokenStream());
 
-      if (commandContext.START() != null && commandContext.START().getText().equals("!mr")) {
+      if (commandContext.START() != null
+            && (commandContext.START().getText().equals("!mr") || commandContext.START().getText().equals("/mr"))) {
         if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", input);
         final Command result = visitor.visit(commandContext);
         if (log.isTraceEnabled()) log.trace("Visited command with result: {}", result);

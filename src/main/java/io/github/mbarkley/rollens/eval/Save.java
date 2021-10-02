@@ -25,7 +25,7 @@ public class Save implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    if (context.getMessage().isFromGuild()) {
+    if (context.getCommandEvent().isFromGuild()) {
       return doSave(context);
     } else {
       return CompletableFuture.completedFuture("Cannot save rolls in direct messages");
@@ -36,7 +36,7 @@ public class Save implements Command {
   private CompletableFuture<String> doSave(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
-        long guildId = context.getMessage().getGuild().getIdLong();
+        long guildId = context.getCommandEvent().getGuild().getIdLong();
         SavedRoll savedRoll = new SavedRoll(guildId, identifier, parameters, rhs);
         handle.attach(SavedRollsDao.class).insertOrReplace(savedRoll);
 

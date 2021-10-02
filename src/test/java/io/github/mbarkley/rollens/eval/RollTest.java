@@ -4,7 +4,7 @@ import io.github.mbarkley.rollens.db.DbUtil;
 import io.github.mbarkley.rollens.eval.Command.ExecutionContext;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
-import io.github.mbarkley.rollens.jda.TestMessage;
+import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.parse.Parser;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
@@ -29,18 +29,18 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RollTest {
-  TestMessage testMessage;
+  TestCommandEvent testCommandEvent;
   Jdbi jdbi;
   ExecutorService executorService;
   Parser parser;
 
   @BeforeEach
   public void setup() throws IOException {
-    testMessage = new TestMessage("");
+    testCommandEvent = new TestCommandEvent("");
     final TestMember member = new TestMember();
     member.setNickname("Test User");
-    testMessage.setMember(member);
-    testMessage.setGuild(new TestGuild(123));
+    testCommandEvent.setMember(member);
+    testCommandEvent.setGuild(new TestGuild(123));
 
     final File dbFile = File.createTempFile("modus-rollens-", ".db");
     dbFile.deleteOnExit();
@@ -61,7 +61,7 @@ public class RollTest {
   public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException {
     final Optional<Command> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testMessage);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
     final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
@@ -72,10 +72,10 @@ public class RollTest {
   @MethodSource("rolls")
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
   public void should_parse_and_execute_roll_in_direct_message(Random rand, String input, String result) throws ExecutionException, InterruptedException {
-    testMessage.setGuild(null);
+    testCommandEvent.setGuild(null);
     final Optional<Command> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testMessage);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
     final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");

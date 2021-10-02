@@ -1,7 +1,7 @@
 package io.github.mbarkley.rollens.util;
 
+import io.github.mbarkley.rollens.discord.CommandEvent;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -10,9 +10,9 @@ public class MessageUtil {
   private MessageUtil() {}
 
   @NotNull
-  public static String getAuthorDisplayName(Message message) {
-    return Optional.ofNullable(message.getMember())
+  public static String getAuthorDisplayName(CommandEvent commandEvent) {
+    return Optional.ofNullable(commandEvent.getMember())
                    .map(Member::getNickname)
-                   .orElseGet(() -> message.getAuthor().getName());
+                   .orElseGet(() -> commandEvent.getUser().getName());
   }
 }

@@ -1,9 +1,9 @@
 package io.github.mbarkley.rollens.eval;
 
+import io.github.mbarkley.rollens.discord.CommandEvent;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.dv8tion.jda.api.entities.Message;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.Random;
@@ -28,7 +28,7 @@ public interface Command {
     private final Parser parser;
     private final Supplier<Random> rand;
     @Getter
-    private final Message message;
+    private final CommandEvent commandEvent;
 
     public Random getRand() {
       return rand.get();

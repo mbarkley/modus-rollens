@@ -1,9 +1,11 @@
 package io.github.mbarkley.rollens;
 
 import io.github.mbarkley.rollens.db.DbUtil;
+import io.github.mbarkley.rollens.discord.Bot;
 import io.github.mbarkley.rollens.parse.Parser;
 import io.github.mbarkley.rollens.util.EnvUtil;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -28,16 +30,22 @@ public class Main {
 
     // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
     // All other events will be disabled.
-    JDABuilder.create(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-              .disableCache(CacheFlag.ACTIVITY,
-                            CacheFlag.VOICE_STATE,
-                            CacheFlag.EMOTE,
-                            CacheFlag.CLIENT_STATUS)
-              .addEventListeners(new Bot(new Parser(), jdbi, Executors.newCachedThreadPool()))
-              .setAutoReconnect(true)
-              .setActivity(Activity.listening("!mr"))
-              .setCallbackPool(ForkJoinPool.commonPool(), true)
-              .build();
+    final Bot bot = new Bot(new Parser(), jdbi, Executors.newCachedThreadPool());
+    final JDA jda = JDABuilder.create(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+                              .disableCache(CacheFlag.ACTIVITY,
+                                            CacheFlag.VOICE_STATE,
+                                            CacheFlag.EMOTE,
+                                            CacheFlag.CLIENT_STATUS)
+                              .addEventListeners(bot)
+                              .setAutoReconnect(true)
+                              .setActivity(Activity.listening("!mr"))
+                              .setCallbackPool(ForkJoinPool.commonPool(), true)
+                              .build();
+
+    // This can take up to an hour to take affect
+    jda.updateCommands()
+       .addCommands(bot.getSlashCommands())
+       .queue();
   }
 
 }

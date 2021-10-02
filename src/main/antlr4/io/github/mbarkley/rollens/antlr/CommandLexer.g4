@@ -50,6 +50,6 @@ fragment VALUE : (NUMBER | REFERENCE);
 
 EXCLAMATION : '!';
 
-START : EXCLAMATION 'mr';
+START : (EXCLAMATION | DIVIDE) 'mr';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z_0-9]*;

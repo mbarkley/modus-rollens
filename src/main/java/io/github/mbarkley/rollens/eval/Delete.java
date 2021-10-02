@@ -10,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -24,7 +22,7 @@ public class Delete implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    if (context.getMessage().isFromGuild()) {
+    if (context.getCommandEvent().isFromGuild()) {
       return doDelete(context);
     } else {
       return CompletableFuture.completedFuture("Cannot delete rolls in direct messages");
@@ -35,7 +33,7 @@ public class Delete implements Command {
   private CompletableFuture<String> doDelete(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
-        long guildId = context.getMessage().getGuild().getIdLong();
+        long guildId = context.getCommandEvent().getGuild().getIdLong();
         final SavedRollsDao dao = handle.attach(SavedRollsDao.class);
         final Optional<SavedRoll> found = dao.find(guildId, identifier, (byte) arity);
         if (found.isPresent()) {

@@ -28,7 +28,7 @@ public class Invoke implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    if (context.getMessage().isFromGuild()) {
+    if (context.getCommandEvent().isFromGuild()) {
       return doInvoke(context);
     } else {
       return CompletableFuture.completedFuture("Cannot invoke saved rolls from direct messages");
@@ -38,7 +38,7 @@ public class Invoke implements Command {
   private CompletableFuture<String> doInvoke(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.getJdbi().open()) {
-        long guildId = context.getMessage().getGuild().getIdLong();
+        long guildId = context.getCommandEvent().getGuild().getIdLong();
         return handle.attach(SavedRollsDao.class)
                      .find(guildId, identifier, (byte) arguments.length)
                      .orElseThrow(() -> new InvalidExpressionException(format("No saved roll found for `%s %d`", identifier, arguments.length)));

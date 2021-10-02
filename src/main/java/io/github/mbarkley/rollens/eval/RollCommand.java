@@ -3,6 +3,7 @@ package io.github.mbarkley.rollens.eval;
 import io.github.mbarkley.rollens.dice.Output;
 import io.github.mbarkley.rollens.dice.PoolResult;
 import io.github.mbarkley.rollens.dice.RollExpression;
+import io.github.mbarkley.rollens.discord.CommandEvent;
 import io.github.mbarkley.rollens.util.MessageUtil;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ public class RollCommand implements Command {
   public CompletableFuture<String> execute(ExecutionContext context) {
     final Output output = rollExpression.apply(context.getRand());
     final String rollsDisplayString = buildRollsDisplayString(output);
-    final Message message = context.getMessage();
-    final String username = MessageUtil.getAuthorDisplayName(message);
+    final CommandEvent commandEvent = context.getCommandEvent();
+    final String username = MessageUtil.getAuthorDisplayName(commandEvent);
 
     return completedFuture(format("%s roll: `%s`\nResult: %d", username, rollsDisplayString, output.getValue()));
   }

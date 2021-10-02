@@ -1,7 +1,7 @@
 package io.github.mbarkley.rollens.parse;
 
 import io.github.mbarkley.rollens.eval.*;
-import io.github.mbarkley.rollens.jda.TestMessage;
+import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,46 +20,46 @@ public class ParserTest {
   @ParameterizedTest(name = "call \"{0}\" as {1}")
   @MethodSource("calls")
   public void should_saved_rolls(String input, Object result) {
-    final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
   @Test
   public void should_parse_help() {
-    final TestMessage message = new TestMessage("!mr help");
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent("!mr help");
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(Help.INSTANCE), parsed);
   }
 
   @Test
   public void should_parse_list() {
-    final TestMessage message = new TestMessage("!mr list");
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent("!mr list");
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(ListSaved.INSTANCE), parsed);
   }
 
   @ParameterizedTest(name = "delete \"{0}\" as {1}")
   @MethodSource("deletes")
   public void should_parse_delete(String input, Object result) {
-    final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
   @ParameterizedTest(name = "save \"{0}\" as {1}")
   @MethodSource("saves")
   public void should_parse_save(String input, Object result) {
-    final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
   @ParameterizedTest(name = "bad expression \"{0}\"")
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
-    final TestMessage message = new TestMessage(input);
-    final Optional<Command> parsed = parser.parse(message.getContentRaw());
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.empty(), parsed);
   }
 
