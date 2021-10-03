@@ -81,7 +81,9 @@ public class ParserTest {
         CommandTestCase.of("foo 1337 13", new Invoke("foo", new int[]{1337, 13}))
     ).flatMap(testCase -> Stream.of(
         arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
-        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+        arguments("!mr roll " + testCase.getExpression(), testCase.getCommand()),
+        arguments("/mr " + testCase.getExpression(), testCase.getCommand()),
+        arguments("/mr roll " + testCase.getExpression(), testCase.getCommand())
     ));
   }
 

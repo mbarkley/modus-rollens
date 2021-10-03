@@ -38,6 +38,18 @@ public class Bot extends ListenerAdapter {
         true
     );
     final SubcommandData delete = new SubcommandData("delete", "Delete a saved roll by name");
+    delete.addOption(
+        OptionType.STRING,
+        "save-name",
+        "The name of a saved roll",
+        true
+    );
+    delete.addOption(
+        OptionType.INTEGER,
+        "arity",
+        "The number of parameters in the saved roll",
+        true
+    );
     final SubcommandData rollCmd = new SubcommandData("roll", "Roll some dice");
     rollCmd.addOption(
         OptionType.STRING,

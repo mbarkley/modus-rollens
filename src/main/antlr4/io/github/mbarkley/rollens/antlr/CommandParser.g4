@@ -25,7 +25,7 @@ delete
     ;
 
 invocation
-    : IDENTIFIER (NUMBER)*
+    : rollKeyword? IDENTIFIER (NUMBER)*
     ;
 
 save
