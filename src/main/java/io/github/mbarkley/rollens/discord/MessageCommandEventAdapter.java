@@ -40,4 +40,9 @@ class MessageCommandEventAdapter implements CommandEvent {
   public void reply(String response) {
     getChannel().sendMessage(response).queue();
   }
+
+  @Override
+  public void markIgnored() {
+    // Messages in channels are usually not directed at us, so we do nothing
+  }
 }

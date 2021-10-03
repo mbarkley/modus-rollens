@@ -42,7 +42,11 @@ list
     ;
 
 roll
-    : rollExpression
+    : rollKeyword? rollExpression
+    ;
+
+rollKeyword
+    : {getCurrentToken().getText().equals("roll")}? IDENTIFIER
     ;
 
 // Set alt numbers manually as workaround for bug

@@ -6,6 +6,7 @@ import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.parse.Parser;
+import lombok.Value;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -83,414 +84,272 @@ public class RollTest {
     Assertions.assertEquals(result, observed);
   }
 
+  @Value
+  private static class RollTestCase {
+    long seed;
+    String roll;
+    String result;
+
+    static RollTestCase of(long seed, String roll, String result) {
+      return new RollTestCase(seed, roll, result);
+    }
+  }
+
   private static Stream<Arguments> rolls() {
     return Stream.of(
         // sum rolls
-        arguments(new Random(1337),
-                  "!mr 2d6",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 1d10",
-                  """
-                      Test User roll: `[2]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2D6",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr d6",
-                  """
-                      Test User roll: `[2]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr D6",
-                  """
-                      Test User roll: `[2]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 + 3d4",
-                  """
-                      Test User roll: `[2, 1][3, 4, 4]`
-                      Result: 14"""),
+        RollTestCase.of(1337, "2d6", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "1d10", """
+            Test User roll: `[2]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2D6", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "d6", """
+            Test User roll: `[2]`
+            Result: 2"""),
+        RollTestCase.of(1337, "D6", """
+            Test User roll: `[2]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2d6 + 3d4", """
+            Test User roll: `[2, 1][3, 4, 4]`
+            Result: 14"""),
         // operators
-        arguments(new Random(1337),
-                  "!mr 2d6 + 2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 5"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 - 2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 * 2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 6"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 / 2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 * 2 + 1",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 7"""),
+        RollTestCase.of(1337, "2d6 + 2", """
+            Test User roll: `[2, 1]`
+            Result: 5"""),
+        RollTestCase.of(1337, "2d6 - 2", """
+            Test User roll: `[2, 1]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d6 * 2", """
+            Test User roll: `[2, 1]`
+            Result: 6"""),
+        RollTestCase.of(1337, "2d6 / 2", """
+            Test User roll: `[2, 1]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d6 * 2 + 1", """
+            Test User roll: `[2, 1]`
+            Result: 7"""),
         // success counts
-        arguments(new Random(1337),
-                  "!mr 2d6 t6",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 0"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 f1",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: -1"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: 0"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 f2",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: -1"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 f2 t7",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: -1"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 e2 f1",
-                  """
-                      Test User roll: `[2, 5], [10, 3]`
-                      Result: 1"""),
+        RollTestCase.of(1337, "2d6 t6", """
+            Test User roll: `[2, 1]`
+            Result: 0"""),
+        RollTestCase.of(1337, "2d6 f1", """
+            Test User roll: `[2, 1]`
+            Result: -1"""),
+        RollTestCase.of(1337, "2d10 t7", """
+            Test User roll: `[2, 5]`
+            Result: 0"""),
+        RollTestCase.of(1337, "2d10 t7 f2", """
+            Test User roll: `[2, 5]`
+            Result: -1"""),
+        RollTestCase.of(1337, "2d10 f2 t7", """
+            Test User roll: `[2, 5]`
+            Result: -1"""),
+        RollTestCase.of(1337, "2d10 t7 e2 f1", """
+            Test User roll: `[2, 5], [10, 3]`
+            Result: 1"""),
         // exploding sum
-        arguments(new Random(1337),
-                  "!mr 2d6 e2",
-                  """
-                      Test User roll: `[2, 1], [6]`
-                      Result: 9"""),
-        arguments(new Random(1337),
-                  "!mr d6 + d6 e2",
-                  """
-                      Test User roll: `[2][1], [6][]`
-                      Result: 9"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 ie2",
-                  """
-                      Test User roll: `[2, 1], [6], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
-                      Result: 48"""),
-        arguments(new Random(1337),
-                  "!mr 1d6 + 1d6 ie2",
-                  """
-                      Test User roll: `[2][1], [6][], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
-                      Result: 48"""),
+        RollTestCase.of(1337, "2d6 e2", """
+            Test User roll: `[2, 1], [6]`
+            Result: 9"""),
+        RollTestCase.of(1337, "d6 + d6 e2", """
+            Test User roll: `[2][1], [6][]`
+            Result: 9"""),
+        RollTestCase.of(1337, "2d6 ie2", """
+            Test User roll: `[2, 1], [6], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
+            Result: 48"""),
+        RollTestCase.of(1337, "1d6 + 1d6 ie2", """
+            Test User roll: `[2][1], [6][], [5], [4], [5], [6], [5], [2], [4], [5], [2], [1], []`
+            Result: 48"""),
         // re-roll low dice
-        arguments(new Random(1337),
-                  "!mr 2d6 r1",
-                  """
-                      Test User roll: `[2, `~~`1`~~`], [6]`
-                      Result: 8"""),
-        arguments(new Random(1337),
-                  "!mr d6 + d6 r1",
-                  """
-                      Test User roll: `[2][`~~`1`~~`], [6]`
-                      Result: 8"""),
-        arguments(new Random(1337),
-                  "!mr d6 + d6 r2",
-                  """
-                      Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
-                      Result: 11"""),
-        arguments(new Random(1337),
-                  "!mr 5d10 k2 r1",
-                  """
-                      Test User roll: `[10, 10, `~~`2, 5, 3`~~`]`
-                      Result: 20"""),
-        arguments(new Random(1337),
-                  "!mr d6 ir2",
-                  """
-                      Test User roll: `[`~~`2`~~`], [`~~`1`~~`], [6]`
-                      Result: 6"""),
-        arguments(new Random(1337),
-                  "!mr d6 + d6 ir2",
-                  """
-                      Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
-                      Result: 11"""),
-        arguments(new Random(1337),
-                  "!mr 5d10 ir5",
-                  """
-                      Test User roll: `[10, 10, `~~`2, 5, 3`~~`], [9, `~~`4, 5`~~`], [8, 8]`
-                      Result: 45"""),
+        RollTestCase.of(1337, "2d6 r1", """
+            Test User roll: `[2, `~~`1`~~`], [6]`
+            Result: 8"""),
+        RollTestCase.of(1337, "d6 + d6 r1", """
+            Test User roll: `[2][`~~`1`~~`], [6]`
+            Result: 8"""),
+        RollTestCase.of(1337, "d6 + d6 r2", """
+            Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
+            Result: 11"""),
+        RollTestCase.of(1337, "5d10 k2 r1", """
+            Test User roll: `[10, 10, `~~`2, 5, 3`~~`]`
+            Result: 20"""),
+        RollTestCase.of(1337, "d6 ir2", """
+            Test User roll: `[`~~`2`~~`], [`~~`1`~~`], [6]`
+            Result: 6"""),
+        RollTestCase.of(1337, "d6 + d6 ir2", """
+            Test User roll: `[`~~`2`~~`][`~~`1`~~`], [6][5]`
+            Result: 11"""),
+        RollTestCase.of(1337, "5d10 ir5", """
+            Test User roll: `[10, 10, `~~`2, 5, 3`~~`], [9, `~~`4, 5`~~`], [8, 8]`
+            Result: 45"""),
         // keep highest
-        arguments(new Random(1337),
-                  "!mr 2d6 k1",
-                  """
-                      Test User roll: `[2, `~~`1`~~`]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 k2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 k3",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 k1 e1",
-                  """
-                      Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
-                      Result: 6"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 e1 k1",
-                  """
-                      Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
-                      Result: 6"""),
+        RollTestCase.of(1337, "2d6 k1", """
+            Test User roll: `[2, `~~`1`~~`]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2d6 k2", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "2d6 k3", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "2d6 k1 e1", """
+            Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
+            Result: 6"""),
+        RollTestCase.of(1337, "2d6 e1 k1", """
+            Test User roll: `[`~~`2, 1`~~`], [6, `~~`5`~~`]`
+            Result: 6"""),
         // keep lowest
-        arguments(new Random(1337),
-                  "!mr 2d6 kl1",
-                  """
-                      Test User roll: `[1, `~~`2`~~`]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 kl2",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 kl3",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 kl1 e1",
-                  """
-                      Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 e1 kl1",
-                  """
-                      Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
-                      Result: 1"""),
+        RollTestCase.of(1337, "2d6 kl1", """
+            Test User roll: `[1, `~~`2`~~`]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d6 kl2", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "2d6 kl3", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "2d6 kl1 e1", """
+            Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d6 e1 kl1", """
+            Test User roll: `[1, `~~`2`~~`], [`~~`6, 5`~~`]`
+            Result: 1"""),
         // drop lowest
-        arguments(new Random(1337),
-                  "!mr 2d6 d1",
-                  """
-                      Test User roll: `[2, `~~`1`~~`]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 d0",
-                  """
-                      Test User roll: `[2, 1]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 d2",
-                  """
-                      Test User roll: `[`~~`2, 1`~~`]`
-                      Result: 0"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 d3",
-                  """
-                      Test User roll: `[`~~`2, 1`~~`]`
-                      Result: 0"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 d1 e1",
-                  """
-                      Test User roll: `[2, `~~`1`~~`], [6, 5]`
-                      Result: 13"""),
-        arguments(new Random(1337),
-                  "!mr 2d6 e1 d1",
-                  """
-                      Test User roll: `[2, `~~`1`~~`], [6, 5]`
-                      Result: 13"""),
+        RollTestCase.of(1337, "2d6 d1", """
+            Test User roll: `[2, `~~`1`~~`]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2d6 d0", """
+            Test User roll: `[2, 1]`
+            Result: 3"""),
+        RollTestCase.of(1337, "2d6 d2", """
+            Test User roll: `[`~~`2, 1`~~`]`
+            Result: 0"""),
+        RollTestCase.of(1337, "2d6 d3", """
+            Test User roll: `[`~~`2, 1`~~`]`
+            Result: 0"""),
+        RollTestCase.of(1337, "2d6 d1 e1", """
+            Test User roll: `[2, `~~`1`~~`], [6, 5]`
+            Result: 13"""),
+        RollTestCase.of(1337, "2d6 e1 d1", """
+            Test User roll: `[2, `~~`1`~~`], [6, 5]`
+            Result: 13"""),
         // exploding success count
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 e5",
-                  """
-                      Test User roll: `[2, 5], [10]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 ie5",
-                  """
-                      Test User roll: `[2, 5], [10], [3], []`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 f2 e5",
-                  """
-                      Test User roll: `[2, 5], [10]`
-                      Result: 0"""),
-        arguments(new Random(1337),
-                  "!mr 2d10 t7 f2 ie5",
-                  """
-                      Test User roll: `[2, 5], [10], [3], []`
-                      Result: 0"""),
+        RollTestCase.of(1337, "2d10 t7 e5", """
+            Test User roll: `[2, 5], [10]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d10 t7 ie5", """
+            Test User roll: `[2, 5], [10], [3], []`
+            Result: 1"""),
+        RollTestCase.of(1337, "2d10 t7 f2 e5", """
+            Test User roll: `[2, 5], [10]`
+            Result: 0"""),
+        RollTestCase.of(1337, "2d10 t7 f2 ie5", """
+            Test User roll: `[2, 5], [10], [3], []`
+            Result: 0"""),
         // nested expressions
-        arguments(new Random(1337),
-                  "!mr (2d10 f2 t7)",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: -1"""),
-        arguments(new Random(1337),
-                  "!mr (2d10 f2 t7) + 2",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr (2d10 f2 t7 + 2)",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr (2d10 f2 t7 + 2) - 2",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: -1"""),
-        arguments(new Random(1337),
-                  "!mr (d10 - 1) * 10 + d10",
-                  """
-                      Test User roll: `[2][5]`
-                      Result: 15"""),
-        arguments(new Random(1337),
-                  "!mr (d10 e2 - 1) * 10 + d10",
-                  """
-                      Test User roll: `[2][10], [5]`
-                      Result: 70"""),
-        arguments(new Random(1337),
-                  "!mr d10 * d10",
-                  """
-                      Test User roll: `[2][5]`
-                      Result: 10"""),
-        arguments(new Random(1337),
-                  "!mr d10 - d10",
-                  """
-                      Test User roll: `[2][5]`
-                      Result: -3"""),
-        arguments(new Random(1337),
-                  "!mr (d10 + 10) / d10",
-                  """
-                      Test User roll: `[2][5]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2 d10 e2",
-                  """
-                      Test User roll: `[2, 10], [5, 3]`
-                      Result: 20"""),
-        arguments(new Random(1337),
-                  "!mr 2 (d10 t5 f1)",
-                  """
-                      Test User roll: `[2, 5]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr 2 (d10 t5 f1) + (d4 t3 f1)",
-                  """
-                      Test User roll: `[2, 5][3]`
-                      Result: 2"""),
-        arguments(new Random(1337),
-                  "!mr 2 (d10 t5 f1 + d4 t3 f1)",
-                  """
-                      Test User roll: `[2, 10][1, 4]`
-                      Result: 1"""),
+        RollTestCase.of(1337, "(2d10 f2 t7)", """
+            Test User roll: `[2, 5]`
+            Result: -1"""),
+        RollTestCase.of(1337, "(2d10 f2 t7) + 2", """
+            Test User roll: `[2, 5]`
+            Result: 1"""),
+        RollTestCase.of(1337, "(2d10 f2 t7 + 2)", """
+            Test User roll: `[2, 5]`
+            Result: 1"""),
+        RollTestCase.of(1337, "(2d10 f2 t7 + 2) - 2", """
+            Test User roll: `[2, 5]`
+            Result: -1"""),
+        RollTestCase.of(1337, "(d10 - 1) * 10 + d10", """
+            Test User roll: `[2][5]`
+            Result: 15"""),
+        RollTestCase.of(1337, "(d10 e2 - 1) * 10 + d10", """
+            Test User roll: `[2][10], [5]`
+            Result: 70"""),
+        RollTestCase.of(1337, "d10 * d10", """
+            Test User roll: `[2][5]`
+            Result: 10"""),
+        RollTestCase.of(1337, "d10 - d10", """
+            Test User roll: `[2][5]`
+            Result: -3"""),
+        RollTestCase.of(1337, "(d10 + 10) / d10", """
+            Test User roll: `[2][5]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2 d10 e2", """
+            Test User roll: `[2, 10], [5, 3]`
+            Result: 20"""),
+        RollTestCase.of(1337, "2 (d10 t5 f1)", """
+            Test User roll: `[2, 5]`
+            Result: 1"""),
+        RollTestCase.of(1337, "2 (d10 t5 f1) + (d4 t3 f1)", """
+            Test User roll: `[2, 5][3]`
+            Result: 2"""),
+        RollTestCase.of(1337, "2 (d10 t5 f1 + d4 t3 f1)", """
+            Test User roll: `[2, 10][1, 4]`
+            Result: 1"""),
         // precedence
-        arguments(new Random(1337),
-                  "!mr d10 + d10 * d10",
-                  """
-                      Test User roll: `[2][5][10]`
-                      Result: 52"""),
-        arguments(new Random(1337),
-                  "!mr d10 - d10 * d10",
-                  """
-                      Test User roll: `[2][5][10]`
-                      Result: -48"""),
-        arguments(new Random(1337),
-                  "!mr d10 + d10 / d3",
-                  """
-                      Test User roll: `[2][5][3]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr d10 - d10 / d3",
-                  """
-                      Test User roll: `[2][5][3]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr d10 * d10 + d10",
-                  """
-                      Test User roll: `[2][5][10]`
-                      Result: 20"""),
-        arguments(new Random(1337),
-                  "!mr d10 / d3 + d10",
-                  """
-                      Test User roll: `[2][1][10]`
-                      Result: 12"""),
-        arguments(new Random(1337),
-                  "!mr d10 / d3 - d10",
-                  """
-                      Test User roll: `[2][1][10]`
-                      Result: -8"""),
-        arguments(new Random(1337),
-                  "!mr d10 * d10 / d3",
-                  """
-                      Test User roll: `[2][5][3]`
-                      Result: 3"""),
-        arguments(new Random(1337),
-                  "!mr (d10 + 10) / d10 * d10",
-                  """
-                      Test User roll: `[2][5][10]`
-                      Result: 20"""),
-        arguments(new Random(1337),
-                  "!mr d10 * d10 / d10",
-                  """
-                      Test User roll: `[2][5][10]`
-                      Result: 1"""),
-        arguments(new Random(1337),
-                  "!mr d10 * 2 + 1",
-                  """
-                      Test User roll: `[2]`
-                      Result: 5"""),
-        arguments(new Random(1337),
-                  "!mr d10 + 2 * 3",
-                  """
-                      Test User roll: `[2]`
-                      Result: 8"""),
-        arguments(new Random(1337),
-                  "!mr d10 * 2 + 1 + 3",
-                  """
-                      Test User roll: `[2]`
-                      Result: 8"""),
-        arguments(new Random(1337),
-                  "!mr d10 * 2 + 1 * 3",
-                  """
-                      Test User roll: `[2]`
-                      Result: 7"""),
-        arguments(new Random(1337),
-                  "!mr d10 + 2 * 3 * 3",
-                  """
-                      Test User roll: `[2]`
-                      Result: 20"""),
-        arguments(new Random(1337),
-                  "!mr (d10 + 2) * 3",
-                  """
-                      Test User roll: `[2]`
-                      Result: 12"""),
-        arguments(new Random(1337),
-                  "!mr d10 + (2 * 3)",
-                  """
-                      Test User roll: `[2]`
-                      Result: 8"""),
-        arguments(new Random(1337),
-                  "!mr d10 * (2 + 3) / 2",
-                  """
-                      Test User roll: `[2]`
-                      Result: 5""")
-    );
+        RollTestCase.of(1337, "d10 + d10 * d10", """
+            Test User roll: `[2][5][10]`
+            Result: 52"""),
+        RollTestCase.of(1337, "d10 - d10 * d10", """
+            Test User roll: `[2][5][10]`
+            Result: -48"""),
+        RollTestCase.of(1337, "d10 + d10 / d3", """
+            Test User roll: `[2][5][3]`
+            Result: 3"""),
+        RollTestCase.of(1337, "d10 - d10 / d3", """
+            Test User roll: `[2][5][3]`
+            Result: 1"""),
+        RollTestCase.of(1337, "d10 * d10 + d10", """
+            Test User roll: `[2][5][10]`
+            Result: 20"""),
+        RollTestCase.of(1337, "d10 / d3 + d10", """
+            Test User roll: `[2][1][10]`
+            Result: 12"""),
+        RollTestCase.of(1337, "d10 / d3 - d10", """
+            Test User roll: `[2][1][10]`
+            Result: -8"""),
+        RollTestCase.of(1337, "d10 * d10 / d3", """
+            Test User roll: `[2][5][3]`
+            Result: 3"""),
+        RollTestCase.of(1337, "(d10 + 10) / d10 * d10", """
+            Test User roll: `[2][5][10]`
+            Result: 20"""),
+        RollTestCase.of(1337, "d10 * d10 / d10", """
+            Test User roll: `[2][5][10]`
+            Result: 1"""),
+        RollTestCase.of(1337, "d10 * 2 + 1", """
+            Test User roll: `[2]`
+            Result: 5"""),
+        RollTestCase.of(1337, "d10 + 2 * 3", """
+            Test User roll: `[2]`
+            Result: 8"""),
+        RollTestCase.of(1337, "d10 * 2 + 1 + 3", """
+            Test User roll: `[2]`
+            Result: 8"""),
+        RollTestCase.of(1337, "d10 * 2 + 1 * 3", """
+            Test User roll: `[2]`
+            Result: 7"""),
+        RollTestCase.of(1337, "d10 + 2 * 3 * 3", """
+            Test User roll: `[2]`
+            Result: 20"""),
+        RollTestCase.of(1337, "(d10 + 2) * 3", """
+            Test User roll: `[2]`
+            Result: 12"""),
+        RollTestCase.of(1337, "d10 + (2 * 3)", """
+            Test User roll: `[2]`
+            Result: 8"""),
+        RollTestCase.of(1337, "d10 * (2 + 3) / 2", """
+            Test User roll: `[2]`
+            Result: 5""")
+    ).flatMap(testCase -> Stream.of(
+        arguments(new Random(testCase.getSeed()), "!mr " + testCase.getRoll(), testCase.getResult()),
+        arguments(new Random(testCase.getSeed()), "!mr roll " + testCase.getRoll(), testCase.getResult()),
+        arguments(new Random(testCase.getSeed()), "/mr " + testCase.getRoll(), testCase.getResult()),
+        arguments(new Random(testCase.getSeed()), "/mr roll " + testCase.getRoll(), testCase.getResult())
+    ));
   }
 }

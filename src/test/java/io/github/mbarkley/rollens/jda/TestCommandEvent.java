@@ -48,6 +48,11 @@ public class TestCommandEvent implements CommandEvent {
   }
 
   @Override
+  public void markIgnored() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean isFromGuild() {
     return guild != null;
   }

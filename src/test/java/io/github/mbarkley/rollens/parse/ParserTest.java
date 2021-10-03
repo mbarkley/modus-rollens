@@ -2,6 +2,7 @@ package io.github.mbarkley.rollens.parse;
 
 import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
+import lombok.Value;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,40 +64,70 @@ public class ParserTest {
     Assertions.assertEquals(Optional.empty(), parsed);
   }
 
+  @Value
+  private static class CommandTestCase {
+    String expression;
+    Command command;
+
+    static CommandTestCase of(String expression, Command command) {
+      return new CommandTestCase(expression, command);
+    }
+  }
+
   private static Stream<Arguments> calls() {
+    Command command = new Invoke("foo", new int[0]);
     return Stream.of(
-        arguments("!mr foo", new Invoke("foo", new int[0])),
-        arguments("!mr foo 1337 13", new Invoke("foo", new int[] {1337, 13}))
-    );
+        CommandTestCase.of("foo", command),
+        CommandTestCase.of("foo 1337 13", new Invoke("foo", new int[]{1337, 13}))
+    ).flatMap(testCase -> Stream.of(
+        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
+        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+    ));
   }
 
   private static Stream<Arguments> deletes() {
     return Stream.of(
-        arguments("!mr delete foo 3", new Delete("foo", 3))
-    );
+        CommandTestCase.of("delete foo 3", new Delete("foo", 3))
+    ).flatMap(testCase -> Stream.of(
+        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
+        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+    ));
   }
 
   private static Stream<Arguments> saves() {
     return Stream.of(
-        arguments("!mr save (foo a b c) = 2d6", new Save("foo", List.of("a", "b", "c"), "2d6")),
-        arguments("!mr save (foo a b c) = {a}d{b} t{c} f1", new Save("foo", List.of("a", "b", "c"), "{a}d{b} t{c} f1")),
-        arguments("!mr save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
-    );
+        CommandTestCase.of("save (foo a b c) = 2d6", new Save("foo", List.of("a", "b", "c"), "2d6")),
+        CommandTestCase
+            .of("save (foo a b c) = {a}d{b} t{c} f1", new Save("foo", List.of("a", "b", "c"), "{a}d{b} t{c} f1")),
+        CommandTestCase
+            .of("save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
+    ).flatMap(testCase -> Stream.of(
+        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
+        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+    ));
   }
 
   private static Stream<Arguments> badExpressions() {
-    return Stream.of(
-        arguments("!foo 2d6"),
-        arguments("!mr 2d 6"),
-        arguments("!mr -2d6"),
-        arguments("!mr 2d-6"),
-        arguments("! mr 2d6"),
-        arguments("!mr notsave (foo a b c) = 2d6"),
-        arguments("!mr {n}d6"),
-        arguments("!mr 2d6 e4 e4"),
-        arguments("!mr 2d6 t4 t4"),
-        arguments("!mr 2d6 e4 ie4"),
-        arguments("!mr 2d6 r4 ir4")
+    return Stream.concat(
+        Stream.of(
+            CommandTestCase.of("2d 6", null),
+            CommandTestCase.of("-2d6", null),
+            CommandTestCase.of("2d-6", null),
+            CommandTestCase.of("notsave (foo a b c) = 2d6", null),
+            CommandTestCase.of("{n}d6", null),
+            CommandTestCase.of("2d6 e4 e4", null),
+            CommandTestCase.of("2d6 t4 t4", null),
+            CommandTestCase.of("2d6 e4 ie4", null),
+            CommandTestCase.of("2d6 r4 ir4", null)
+        ).flatMap(testCase -> Stream.of(
+            arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
+            arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+        )),
+        Stream.of(
+            arguments("! mr 2d6", null),
+            arguments("/ mr 2d6", null),
+            arguments("!foo 2d6", null)
+        )
     );
   }
 

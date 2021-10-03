@@ -5,7 +5,10 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 class SlashCommandEventAdapter implements CommandEvent {
@@ -33,11 +36,21 @@ class SlashCommandEventAdapter implements CommandEvent {
 
   @Override
   public @NotNull String getCommand() {
-    return event.getCommandString();
+    return """
+        /%s %s""".formatted(
+        event.getCommandPath().replace('/', ' '),
+        event.getOptions().stream().map(OptionMapping::getAsString).collect(Collectors.joining(" "))
+    );
   }
 
   @Override
   public void reply(String response) {
     event.reply(response).queue();
+  }
+
+  @Override
+  public void markIgnored() {
+    event.reply("Could not recognize %s command. See `/mr help` for valid examples."
+                    .formatted(event.getSubcommandName())).queue();
   }
 }

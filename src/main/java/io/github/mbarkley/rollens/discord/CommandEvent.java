@@ -16,6 +16,8 @@ public interface CommandEvent {
 
   void reply(String response);
 
+  void markIgnored();
+
   default boolean isFromGuild() {
     return ChannelType.TEXT.equals(getChannel().getType());
   }
