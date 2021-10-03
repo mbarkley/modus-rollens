@@ -33,13 +33,9 @@ public class Bot extends ListenerAdapter {
     final SubcommandData save = new SubcommandData("save", "Save a roll by name");
     save.addOption(
         OptionType.STRING,
-        "roll-name",
-        "The name of the saved roll", true
-    );
-    save.addOption(
-        OptionType.STRING,
-        "dice-pool",
-        "An expression of a dice pool (e.g. `2d6 + 1` or `d20 + {dex}`)", true
+        "save-assignment",
+        "An assignment of a dice pool by name (e.g. `roll = 2d6 + 1` or `roll dex = d20 + {dex}`)",
+        true
     );
     final SubcommandData delete = new SubcommandData("delete", "Delete a saved roll by name");
     final SubcommandData rollCmd = new SubcommandData("roll", "Roll some dice");

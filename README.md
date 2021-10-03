@@ -45,8 +45,8 @@ the same rolls.
 
 | Command   | Meaning                  |
 |-----------|--------------------------|
-|`!mr save (werewolf num diff) = {num}d10 t{diff} f1`| Save a roll called werewolf.|
-|`!mr save (werewolf num) = {num}d10 t6 f1`| Save a roll called werewolf that has a different number of inputs from the other saved roll.|
+|`!mr save werewolf num diff = {num}d10 t{diff} f1`| Save a roll called werewolf.|
+|`!mr save werewolf num = {num}d10 t6 f1`| Save a roll called werewolf that has a different number of inputs from the other saved roll.|
 
 ### Use a Saved Roll
 

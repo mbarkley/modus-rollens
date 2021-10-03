@@ -35,8 +35,8 @@ public class Help implements Command {
           `!mr 5d10 kl3`: Roll five ten-sided dice, keep the three lowest results.
           
           __Save Custom Rolls__
-          `!mr save (werewolf num diff) = {num}d10 t{diff} f1`: Save a roll called `werewolf`.
-          `!mr save (werewolf num) = {num}d10 t6 f1`: Save a roll called `werewolf` that has a different number of inputs from the other saved roll.
+          `!mr save werewolf num diff = {num}d10 t{diff} f1`: Save a roll called `werewolf`.
+          `!mr save werewolf num = {num}d10 t6 f1`: Save a roll called `werewolf` that has a different number of inputs from the other saved roll.
           
           __Use a Saved Roll__
           `!mr werewolf 5 6`: Use the saved roll, `werewolf`, with `num=5` and `diff=6`.

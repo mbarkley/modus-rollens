@@ -97,10 +97,15 @@ public class ParserTest {
   private static Stream<Arguments> saves() {
     return Stream.of(
         CommandTestCase.of("save (foo a b c) = 2d6", new Save("foo", List.of("a", "b", "c"), "2d6")),
+        CommandTestCase.of("save foo a b c = 2d6", new Save("foo", List.of("a", "b", "c"), "2d6")),
         CommandTestCase
             .of("save (foo a b c) = {a}d{b} t{c} f1", new Save("foo", List.of("a", "b", "c"), "{a}d{b} t{c} f1")),
         CommandTestCase
-            .of("save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
+            .of("save foo a b c = {a}d{b} t{c} f1", new Save("foo", List.of("a", "b", "c"), "{a}d{b} t{c} f1")),
+        CommandTestCase
+            .of("save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}")),
+        CommandTestCase
+            .of("save foo a b c = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
     ).flatMap(testCase -> Stream.of(
         arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
         arguments("/mr " + testCase.getExpression(), testCase.getCommand())

@@ -29,8 +29,9 @@ invocation
     ;
 
 save
-    // save (f arg1 arg2...) = <expression>
-    : {getCurrentToken().getText().equals("save")}? IDENTIFIER LB IDENTIFIER (IDENTIFIER)* RB EQ roll
+    // save f arg1 arg2... = <expression>
+    : {getCurrentToken().getText().equals("save")}? IDENTIFIER IDENTIFIER (IDENTIFIER)* EQ roll
+    | {getCurrentToken().getText().equals("save")}? IDENTIFIER LB IDENTIFIER (IDENTIFIER)* RB EQ roll
     ;
 
 help
