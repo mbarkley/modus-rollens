@@ -19,7 +19,7 @@ public class ListSaved implements Command {
   public static ListSaved INSTANCE = new ListSaved();
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    if (context.getCommandEvent().isFromGuild()) {
+    if (context.commandEvent().isFromGuild()) {
       return doList(context);
     } else {
       return CompletableFuture.completedFuture("Cannot save and list rolls in direct messages");
@@ -29,8 +29,8 @@ public class ListSaved implements Command {
   @NotNull
   private CompletableFuture<String> doList(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.getJdbi().open()) {
-        long guildId = context.getCommandEvent().getGuild().getIdLong();
+      try (Handle handle = context.jdbi().open()) {
+        long guildId = context.commandEvent().getGuild().getIdLong();
         final List<SavedRoll> savedRolls = handle.attach(SavedRollsDao.class)
                                                  .findByGuild(guildId);
         savedRolls.sort(Comparator.comparing(SavedRoll::getRollName));
@@ -45,6 +45,6 @@ public class ListSaved implements Command {
 
         return sb.toString();
       }
-    }, context.getExecutorService());
+    }, context.executorService());
   }
 }

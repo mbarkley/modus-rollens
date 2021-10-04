@@ -22,7 +22,7 @@ public class Delete implements Command {
 
   @Override
   public CompletableFuture<String> execute(ExecutionContext context) {
-    if (context.getCommandEvent().isFromGuild()) {
+    if (context.commandEvent().isFromGuild()) {
       return doDelete(context);
     } else {
       return CompletableFuture.completedFuture("Cannot delete rolls in direct messages");
@@ -32,8 +32,8 @@ public class Delete implements Command {
   @NotNull
   private CompletableFuture<String> doDelete(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.getJdbi().open()) {
-        long guildId = context.getCommandEvent().getGuild().getIdLong();
+      try (Handle handle = context.jdbi().open()) {
+        long guildId = context.commandEvent().getGuild().getIdLong();
         final SavedRollsDao dao = handle.attach(SavedRollsDao.class);
         final Optional<SavedRoll> found = dao.find(guildId, identifier, (byte) arity);
         if (found.isPresent()) {
@@ -44,6 +44,6 @@ public class Delete implements Command {
           return format("No saved roll found for `%s %d`", identifier, arity);
         }
       }
-    }, context.getExecutorService());
+    }, context.executorService());
   }
 }

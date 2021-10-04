@@ -27,7 +27,7 @@ public class RollCommand implements Command {
   public CompletableFuture<String> execute(ExecutionContext context) {
     final Output output = rollExpression.apply(context.getRand());
     final String rollsDisplayString = buildRollsDisplayString(output);
-    final CommandEvent commandEvent = context.getCommandEvent();
+    final CommandEvent commandEvent = context.commandEvent();
     final String username = MessageUtil.getAuthorDisplayName(commandEvent);
 
     return completedFuture(format("%s roll: `%s`\nResult: %d", username, rollsDisplayString, output.getValue()));

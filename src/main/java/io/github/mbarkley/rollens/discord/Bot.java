@@ -54,7 +54,8 @@ public class Bot extends ListenerAdapter {
     rollCmd.addOption(
         OptionType.STRING,
         "dice-pool",
-        "An expression of a dice pool (e.g. `2d6 + 1`)", true
+        "An expression of a dice pool (e.g. `2d6 + 1`)",
+        true
     );
 
     rootCmd.addSubcommands(
