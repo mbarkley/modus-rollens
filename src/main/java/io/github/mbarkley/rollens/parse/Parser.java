@@ -77,12 +77,12 @@ public class Parser {
     private final TokenStream tokenStream;
 
     @Override
-    public Command visitCommand(CommandParser.CommandContext ctx) {
+    public Command<?> visitCommand(CommandParser.CommandContext ctx) {
       return visitExpression(ctx.expression());
     }
 
     @Override
-    public Command visitExpression(CommandParser.ExpressionContext ctx) {
+    public Command<?> visitExpression(CommandParser.ExpressionContext ctx) {
       return Objects.requireNonNull(switch (ctx.getAltNumber()) {
         case 1 -> visitRoll(ctx.roll());
         case 2 -> visitSave(ctx.save());
@@ -95,17 +95,17 @@ public class Parser {
     }
 
     @Override
-    public Command visitHelp(CommandParser.HelpContext ctx) {
+    public Command<?> visitHelp(CommandParser.HelpContext ctx) {
       return Help.INSTANCE;
     }
 
     @Override
-    public Command visitDelete(CommandParser.DeleteContext ctx) {
+    public Command<?> visitDelete(CommandParser.DeleteContext ctx) {
       return new Delete(ctx.IDENTIFIER(1).getText(), Integer.parseInt(ctx.NUMBER().getText()));
     }
 
     @Override
-    public Command visitInvocation(CommandParser.InvocationContext ctx) {
+    public Command<?> visitInvocation(CommandParser.InvocationContext ctx) {
       final int[] arguments = ctx.NUMBER()
                                  .stream()
                                  .map(TerminalNode::getText)
@@ -115,12 +115,12 @@ public class Parser {
     }
 
     @Override
-    public Command visitList(CommandParser.ListContext ctx) {
+    public Command<?> visitList(CommandParser.ListContext ctx) {
       return ListSaved.INSTANCE;
     }
 
     @Override
-    public Command visitSave(CommandParser.SaveContext ctx) {
+    public Command<?> visitSave(CommandParser.SaveContext ctx) {
       final String identifier = ctx.IDENTIFIER(1).getText();
       final List<String> params = ctx.IDENTIFIER()
                                      .subList(2, ctx.IDENTIFIER().size())

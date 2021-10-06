@@ -46,7 +46,7 @@ public class ComplexRollExpression implements RollExpression {
     for (int i = 0; ; i++) {
       final List<PoolResult> poolList = new ArrayList<>();
       allResults.add(poolList);
-      for (var output : Arrays.asList(outputs)) {
+      for (var output : outputs) {
         final List<List<PoolResult>> results = output.getResults();
         if (i < results.size()) {
           poolList.addAll(results.get(i));
