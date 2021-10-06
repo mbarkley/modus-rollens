@@ -2,6 +2,7 @@ package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.SavedRoll;
 import io.github.mbarkley.rollens.db.SavedRollsDao;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -10,38 +11,37 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Save implements Command {
+public class Save implements Command<StringOutput> {
   private final String identifier;
   private final List<String> parameters;
   private final String rhs;
 
   @Override
-  public CompletableFuture<String> execute(ExecutionContext context) {
+  public CompletableFuture<StringOutput> execute(ExecutionContext context) {
     if (context.commandEvent().isFromGuild()) {
       return doSave(context);
     } else {
-      return CompletableFuture.completedFuture("Cannot save rolls in direct messages");
+      return completedFuture(new StringOutput("Cannot save rolls in direct messages"));
     }
   }
 
   @NotNull
-  private CompletableFuture<String> doSave(ExecutionContext context) {
+  private CompletableFuture<StringOutput> doSave(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
         SavedRoll savedRoll = new SavedRoll(guildId, identifier, parameters, rhs);
         handle.attach(SavedRollsDao.class).insertOrReplace(savedRoll);
 
-        return format("Saved (%s)", Stream.concat(Stream.of(identifier), parameters.stream())
-                                          .collect(Collectors.joining(" ")));
+        return new StringOutput(
+            "Saved (%s %s)".formatted(identifier, String.join(" ", parameters))
+        );
       }
     }, context.executorService());
   }

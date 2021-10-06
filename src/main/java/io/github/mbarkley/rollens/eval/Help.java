@@ -1,15 +1,18 @@
 package io.github.mbarkley.rollens.eval;
 
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Help implements Command {
+public class Help implements Command<StringOutput> {
   public static Help INSTANCE = new Help();
   public static String HELP_MESSAGE =
       """
@@ -51,7 +54,7 @@ public class Help implements Command {
           `!mr help`""";
 
   @Override
-  public CompletableFuture<String> execute(ExecutionContext context) {
-    return CompletableFuture.completedFuture(HELP_MESSAGE);
+  public CompletableFuture<StringOutput> execute(ExecutionContext context) {
+    return completedFuture(new StringOutput(HELP_MESSAGE));
   }
 }

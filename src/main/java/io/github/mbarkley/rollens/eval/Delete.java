@@ -2,6 +2,7 @@ package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.SavedRoll;
 import io.github.mbarkley.rollens.db.SavedRollsDao;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -11,26 +12,26 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Delete implements Command {
+public class Delete implements Command<StringOutput> {
   private final String identifier;
   private final int arity;
 
   @Override
-  public CompletableFuture<String> execute(ExecutionContext context) {
+  public CompletableFuture<StringOutput> execute(ExecutionContext context) {
     if (context.commandEvent().isFromGuild()) {
       return doDelete(context);
     } else {
-      return CompletableFuture.completedFuture("Cannot delete rolls in direct messages");
+      return completedFuture(new StringOutput("Cannot delete rolls in direct messages"));
     }
   }
 
   @NotNull
-  private CompletableFuture<String> doDelete(ExecutionContext context) {
+  private CompletableFuture<StringOutput> doDelete(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
@@ -39,9 +40,13 @@ public class Delete implements Command {
         if (found.isPresent()) {
           dao.delete(guildId, identifier, (byte) arity);
 
-          return format("Deleted `%s`", found.get().toAssignmentString());
+          return new StringOutput(
+              "Deleted `%s`".formatted(found.get().toAssignmentString())
+          );
         } else {
-          return format("No saved roll found for `%s %d`", identifier, arity);
+          return new StringOutput(
+              "No saved roll found for `%s %d`".formatted(identifier, arity)
+          );
         }
       }
     }, context.executorService());

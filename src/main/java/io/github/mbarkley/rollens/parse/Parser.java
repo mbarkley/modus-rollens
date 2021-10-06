@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class Parser {
   private static final Pattern DICE = Pattern.compile("(\\d+)?[dD](\\d+)");
 
-  public Optional<Command> parse(String input) {
+  public Optional<Command<?>> parse(String input) {
     final CommandParser parser = initAntlrParser(input);
 
     try {
@@ -36,7 +36,7 @@ public class Parser {
       if (commandContext.START() != null
             && (commandContext.START().getText().equals("!mr") || commandContext.START().getText().equals("/mr"))) {
         if (log.isTraceEnabled()) log.trace("Attempting to visit command: {}", input);
-        final Command result = visitor.visit(commandContext);
+        final Command<?> result = visitor.visit(commandContext);
         if (log.isTraceEnabled()) log.trace("Visited command with result: {}", result);
 
         return Optional.ofNullable(result);
@@ -55,7 +55,7 @@ public class Parser {
     final CommandParserVisitor visitor = new CommandParserVisitor(parser.getTokenStream());
 
     try {
-      return Optional.ofNullable(visitor.visitRoll(rollContext));
+      return Optional.of(visitor.visitRoll(rollContext));
     } catch (ParseCancellationException ex) {
       return Optional.empty();
     }
@@ -73,7 +73,7 @@ public class Parser {
   }
 
   @RequiredArgsConstructor
-  private static class CommandParserVisitor extends CommandParserBaseVisitor<Command> {
+  private static class CommandParserVisitor extends CommandParserBaseVisitor<Command<?>> {
     private final TokenStream tokenStream;
 
     @Override

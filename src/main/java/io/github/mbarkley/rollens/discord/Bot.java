@@ -1,6 +1,7 @@
 package io.github.mbarkley.rollens.discord;
 
 import io.github.mbarkley.rollens.eval.Command;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -103,13 +104,17 @@ public class Bot extends ListenerAdapter {
                   }
                   command
                       .execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom::current, event))
-                      .whenComplete((responseText, ex) -> {
-                        if (ex != null) {
-                          log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
-                          log.debug("Exception stacktrace", ex);
-                        } else {
-                          log.debug("Sending response text for message.id={}", event.getId());
-                          event.reply(responseText);
+                      .whenComplete((Command.CommandOutput output, Throwable ex) -> {
+                        switch (output) {
+                          case StringOutput responseText -> {
+                            if (ex != null) {
+                              log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
+                              log.debug("Exception stacktrace", ex);
+                            } else {
+                              log.debug("Sending response text for message.id={}", event.getId());
+                              event.reply(responseText.value());
+                            }
+                          }
                         }
                       });
                 } catch (Exception e) {

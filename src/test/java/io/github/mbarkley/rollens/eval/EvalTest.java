@@ -1,9 +1,10 @@
 package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.DbUtil;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
+import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
-import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.parse.Parser;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.*;
@@ -70,25 +71,25 @@ public class EvalTest {
     CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
 
     // validate list
-    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
     Assertions.assertEquals("""
                                 __Saved Rolls__
                                 `(foo) = 2d6`
                                 `(foo a) = {a}d6`
                                 `(foo a b c) = {a}d{b} t{c}`""",
-                            loaded);
+                            loaded.value());
 
     // do delete
-    final String deleted = new Delete("foo", 1).execute(context).get(1, TimeUnit.SECONDS);
-    Assertions.assertEquals("Deleted `(foo a) = {a}d6`", deleted);
+    final StringOutput deleted = new Delete("foo", 1).execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals("Deleted `(foo a) = {a}d6`", deleted.value());
 
     // validate list
-    final String newList = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    final StringOutput newList = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
     Assertions.assertEquals("""
                                 __Saved Rolls__
                                 `(foo) = 2d6`
                                 `(foo a b c) = {a}d{b} t{c}`""",
-                            newList);
+                            newList.value());
   }
 
   @Test
@@ -110,14 +111,14 @@ public class EvalTest {
                                              .toArray(CompletableFuture[]::new);
     CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
 
-    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
                                 __Saved Rolls__
                                 `(foo0) = 2d6`
                                 `(foo1 a) = {a}d6`
                                 `(foo3 a b c) = {a}d{b} t{c}`""",
-                            loaded);
+                            loaded.value());
   }
 
   @Test
@@ -133,12 +134,12 @@ public class EvalTest {
              .thenCompose(output -> secondSave.execute(context))
              .get(5, TimeUnit.SECONDS);
 
-    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
                                 __Saved Rolls__
                                 `(foo1 a) = {a}d10`""",
-                            loaded);
+                            loaded.value());
   }
 
   @Test
@@ -147,21 +148,21 @@ public class EvalTest {
     save_and_list_in_guild_should_show_all_saved();
     testCommandEvent.setGuild(new TestGuild(321));
     Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
-    final String loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+    final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
                                 __Saved Rolls__
                                 No saved rolls""",
-                            loaded);
+                            loaded.value());
   }
 
   @MethodSource("guildOnlyCommands")
   @ParameterizedTest(name = "invoking \"{0}\" should have failure message \"{1}\"")
-  public void should_invoke_saved_roll_in_guild(Command command, String result) throws InterruptedException, ExecutionException, TimeoutException {
+  public void should_invoke_saved_roll_in_guild(Command<StringOutput> command, String result) throws InterruptedException, ExecutionException, TimeoutException {
     testCommandEvent.setGuild(null);
     final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
-    final String observed = command.execute(context).get(1, TimeUnit.SECONDS);
-    Assertions.assertEquals(result, observed);
+    final StringOutput observed = command.execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals(result, observed.value());
   }
 
   @MethodSource("invocations")
@@ -171,8 +172,8 @@ public class EvalTest {
     // setup
     save.execute(context).get(1, TimeUnit.SECONDS);
     // test
-    final String invoked = invoke.execute(context).get(1, TimeUnit.SECONDS);
-    Assertions.assertEquals(result, invoked);
+    final StringOutput invoked = invoke.execute(context).get(1, TimeUnit.SECONDS);
+    Assertions.assertEquals(result, invoked.value());
   }
 
   private Stream<Arguments> invocations() {

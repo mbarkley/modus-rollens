@@ -2,6 +2,7 @@ package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.SavedRoll;
 import io.github.mbarkley.rollens.db.SavedRollsDao;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.jdbi.v3.core.Handle;
@@ -11,10 +12,11 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @ToString
 @EqualsAndHashCode
-public class Invoke implements Command {
+public class Invoke implements Command<StringOutput> {
   private final String identifier;
   private final int[] arguments;
 
@@ -27,15 +29,15 @@ public class Invoke implements Command {
   }
 
   @Override
-  public CompletableFuture<String> execute(ExecutionContext context) {
+  public CompletableFuture<StringOutput> execute(ExecutionContext context) {
     if (context.commandEvent().isFromGuild()) {
       return doInvoke(context);
     } else {
-      return CompletableFuture.completedFuture("Cannot invoke saved rolls from direct messages");
+      return completedFuture(new StringOutput("Cannot invoke saved rolls from direct messages"));
     }
   }
 
-  private CompletableFuture<String> doInvoke(ExecutionContext context) {
+  private CompletableFuture<StringOutput> doInvoke(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
       try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
@@ -47,13 +49,16 @@ public class Invoke implements Command {
     }, context.executorService()).thenCompose(savedRoll -> {
       final String expressionWithArgs = getSubstitutedExpression(savedRoll);
 
-      final Optional<? extends Command> parsed = context.parser().parseRoll(expressionWithArgs);
-      Command rollCommand = parsed
+      final Optional<RollCommand> parsed = context.parser().parseRoll(expressionWithArgs);
+      RollCommand rollCommand = parsed
           .orElseThrow(() -> new InvalidExpressionException(
               format("Expression invalid after argument substitution: `%s`",
                      expressionWithArgs)));
       return rollCommand.execute(context)
-                        .thenApply(result -> format("Evaluating: `%s`\n%s", expressionWithArgs, result));
+                        .thenApply(result -> new StringOutput(
+                            """
+                                Evaluating: `%s`
+                                %s""".formatted(expressionWithArgs, result.value())));
     });
   }
 

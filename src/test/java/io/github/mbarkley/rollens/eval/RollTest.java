@@ -1,6 +1,7 @@
 package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.db.DbUtil;
+import io.github.mbarkley.rollens.eval.Command.CommandOutput;
 import io.github.mbarkley.rollens.eval.Command.ExecutionContext;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
@@ -60,28 +61,32 @@ public class RollTest {
   @ParameterizedTest(name = "roll \"{1}\" as {2}")
   @MethodSource("rolls")
   public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException {
-    final Optional<Command> parsed = parser.parse(input);
+    final Optional<Command<?>> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
     ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
-    final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
-                                                     .execute(ctx);
+    final CompletableFuture<? extends CommandOutput> executed = parsed.orElseThrow(() -> new AssertionError(""))
+                                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
-    final String observed = executed.get();
-    Assertions.assertEquals(result, observed);
+    final CommandOutput observed = executed.get();
+    switch (observed) {
+      case Command.StringOutput s -> Assertions.assertEquals(result, s.value());
+    }
   }
 
   @MethodSource("rolls")
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
   public void should_parse_and_execute_roll_in_direct_message(Random rand, String input, String result) throws ExecutionException, InterruptedException {
     testCommandEvent.setGuild(null);
-    final Optional<Command> parsed = parser.parse(input);
+    final Optional<Command<?>> parsed = parser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
     ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
-    final CompletableFuture<String> executed = parsed.orElseThrow(() -> new AssertionError(""))
-                                                     .execute(ctx);
+    final CompletableFuture<? extends CommandOutput> executed = parsed.orElseThrow(() -> new AssertionError(""))
+                                                                      .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
-    final String observed = executed.get();
-    Assertions.assertEquals(result, observed);
+    final CommandOutput observed = executed.get();
+    switch (observed) {
+      case Command.StringOutput s -> Assertions.assertEquals(result, s.value());
+    }
   }
 
   @Value

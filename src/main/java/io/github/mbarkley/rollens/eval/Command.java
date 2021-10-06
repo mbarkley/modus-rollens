@@ -9,12 +9,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
-public interface Command {
+public interface Command<T extends Command.CommandOutput> {
 
   /**
    * @return the text for a message to send in response
    */
-  CompletableFuture<String> execute(ExecutionContext context);
+  CompletableFuture<T> execute(ExecutionContext context);
 
   record ExecutionContext(ExecutorService executorService,
                           Jdbi jdbi,
@@ -25,4 +25,8 @@ public interface Command {
       return rand.get();
     }
   }
+
+  sealed interface CommandOutput permits StringOutput {}
+
+  record StringOutput(String value) implements CommandOutput {}
 }

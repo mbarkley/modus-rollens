@@ -1,6 +1,7 @@
 package io.github.mbarkley.rollens.parse;
 
 import io.github.mbarkley.rollens.eval.*;
+import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import lombok.Value;
 import org.junit.jupiter.api.Assertions;
@@ -22,21 +23,21 @@ public class ParserTest {
   @MethodSource("calls")
   public void should_saved_rolls(String input, Object result) {
     final TestCommandEvent message = new TestCommandEvent(input);
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
   @Test
   public void should_parse_help() {
     final TestCommandEvent message = new TestCommandEvent("!mr help");
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(Help.INSTANCE), parsed);
   }
 
   @Test
   public void should_parse_list() {
     final TestCommandEvent message = new TestCommandEvent("!mr list");
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(ListSaved.INSTANCE), parsed);
   }
 
@@ -44,7 +45,7 @@ public class ParserTest {
   @MethodSource("deletes")
   public void should_parse_delete(String input, Object result) {
     final TestCommandEvent message = new TestCommandEvent(input);
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
@@ -52,7 +53,7 @@ public class ParserTest {
   @MethodSource("saves")
   public void should_parse_save(String input, Object result) {
     final TestCommandEvent message = new TestCommandEvent(input);
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
@@ -60,22 +61,22 @@ public class ParserTest {
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
     final TestCommandEvent message = new TestCommandEvent(input);
-    final Optional<Command> parsed = parser.parse(message.getCommand());
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
     Assertions.assertEquals(Optional.empty(), parsed);
   }
 
   @Value
   private static class CommandTestCase {
     String expression;
-    Command command;
+    Command<?> command;
 
-    static CommandTestCase of(String expression, Command command) {
+    static CommandTestCase of(String expression, Command<?> command) {
       return new CommandTestCase(expression, command);
     }
   }
 
   private static Stream<Arguments> calls() {
-    Command command = new Invoke("foo", new int[0]);
+    Command<StringOutput> command = new Invoke("foo", new int[0]);
     return Stream.of(
         CommandTestCase.of("foo", command),
         CommandTestCase.of("foo 1337 13", new Invoke("foo", new int[]{1337, 13}))
