@@ -68,13 +68,15 @@ public class Bot extends ListenerAdapter {
         "An expression of a dice pool (e.g. `2d6 + 1`)",
         true
     );
+    final SubcommandData selectCmd = new SubcommandData("select", "Interactively select a saved roll");
 
     rootCmd.addSubcommands(
         helpCmd,
         list,
         save,
         delete,
-        rollCmd
+        rollCmd,
+        selectCmd
     );
 
     return List.of(rootCmd);
