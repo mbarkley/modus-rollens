@@ -43,15 +43,15 @@ class CommandSelectMenuCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public void reply(@NotNull String response) {
-    final MessageBuilder builder = new MessageBuilder();
-    builder.setContent(response);
-    event.editMessage(builder.build()).queue();
-  }
-
-  @Override
-  public void reply(@NotNull Message message) {
-    event.editMessage(message).queue();
+  public void reply(@NotNull Message message, boolean intermediate) {
+    if (event.getMessage().isEphemeral() && !intermediate) {
+      final MessageBuilder builder = new MessageBuilder();
+      builder.setContent("Complete");
+      event.editMessage(builder.build())
+           .and(event.getMessage().getChannel().sendMessage(message)).queue();
+    } else {
+      event.editMessage(message).queue();
+    }
   }
 
   @Override

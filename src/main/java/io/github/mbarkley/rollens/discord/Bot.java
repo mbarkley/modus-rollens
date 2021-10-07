@@ -153,7 +153,7 @@ public class Bot extends ListenerAdapter {
                                 )
                             );
 
-                            event.reply(builder.build());
+                            event.reply(builder.build(), true);
                           }
                           case ArgumentSelectOutput argumentSelectOutput -> {
                             log.debug("Sending response arg select for message.id={}", event.getId());
@@ -173,7 +173,7 @@ public class Bot extends ListenerAdapter {
                             );
                             builder.setActionRows(ActionRow.of(argMenu));
 
-                            event.reply(builder.build());
+                            event.reply(builder.build(), true);
                           }
                         }
                       });

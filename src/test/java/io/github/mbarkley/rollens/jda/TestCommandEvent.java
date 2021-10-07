@@ -40,12 +40,12 @@ public class TestCommandEvent implements CommandEvent {
   }
 
   @Override
-  public void reply(String response) {
+  public void reply(@NotNull String response) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void reply(@NotNull Message message) {
+  public void reply(@NotNull Message message, boolean intermediate) {
     throw new UnsupportedOperationException();
   }
 

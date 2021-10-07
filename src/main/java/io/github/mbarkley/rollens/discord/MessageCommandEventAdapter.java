@@ -38,13 +38,8 @@ class MessageCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public void reply(@NotNull String response) {
-    getChannel().sendMessage(response).queue();
-  }
-
-  @Override
-  public void reply(@NotNull Message message) {
-    getChannel().sendMessage(message).queue();
+  public void reply(@NotNull Message message, boolean intermediate) {
+    event.getMessage().reply(message).queue();
   }
 
   @Override

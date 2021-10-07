@@ -1,5 +1,6 @@
 package io.github.mbarkley.rollens.discord;
 
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,9 +15,13 @@ public interface CommandEvent {
 
   @NotNull String getCommand();
 
-  void reply(@NotNull String response);
+  void reply(@NotNull Message message, boolean intermediate);
 
-  void reply(@NotNull Message message);
+  default void reply(@NotNull String response) {
+    final MessageBuilder builder = new MessageBuilder();
+    builder.setContent(response);
+    reply(builder.build(), false);
+  }
 
   void markIgnored();
 
