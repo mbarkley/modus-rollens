@@ -1,30 +1,31 @@
 package io.github.mbarkley.rollens.discord;
 
 import lombok.RequiredArgsConstructor;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor
-class MessageCommandEventAdapter implements CommandEvent {
-  private final MessageReceivedEvent event;
+class CommandSelectMenuCommandEventAdapter implements CommandEvent {
+  private final SelectionMenuEvent event;
 
   @Override
   public @NotNull String getId() {
-    return event.getMessageId();
+    return event.getId();
   }
 
   @Override
   public @NotNull MessageChannel getChannel() {
-    return event.getTextChannel();
+    return event.getChannel();
   }
 
   @Override
   public @NotNull User getUser() {
-    return event.getAuthor();
+    return event.getUser();
   }
 
   @Override
@@ -34,21 +35,28 @@ class MessageCommandEventAdapter implements CommandEvent {
 
   @Override
   public @NotNull String getCommand() {
-    return event.getMessage().getContentRaw();
+    if (event.getValues().size() == 1) {
+      return event.getValues().get(0);
+    } else {
+      throw new IllegalStateException();
+    }
   }
 
   @Override
   public void reply(@NotNull String response) {
-    getChannel().sendMessage(response).queue();
+    final MessageBuilder builder = new MessageBuilder();
+    builder.setContent(response);
+    event.editMessage(builder.build()).queue();
   }
 
   @Override
   public void reply(@NotNull Message message) {
-    getChannel().sendMessage(message).queue();
+    event.editMessage(message).queue();
   }
 
   @Override
   public void markIgnored() {
-    // Messages in channels are usually not directed at us, so we do nothing
+    event.reply("Could not process selection [%s]."
+                    .formatted(String.join(", ", event.getValues()))).queue();
   }
 }

@@ -89,9 +89,30 @@ public class Parser {
         case 3 -> visitList(ctx.list());
         case 4 -> visitDelete(ctx.delete());
         case 5 -> visitHelp(ctx.help());
-        case 6 -> visitInvocation(ctx.invocation());
+        case 6 -> visitSelect(ctx.select());
+        case 7 -> visitInvocation(ctx.invocation());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command<?> visitSelect(CommandParser.SelectContext ctx) {
+      if (ctx.declarationLHS() != null) {
+        final CommandParser.DeclarationLHSContext lhs = ctx.declarationLHS();
+        final String name = lhs.IDENTIFIER(0).getText();
+        final List<String> params = lhs.IDENTIFIER().stream().skip(1).map(TerminalNode::getText).toList();
+        if (ctx.NUMBER().isEmpty()) {
+          return new SelectSaved(new DeclarationLHS(name, params), new int[0]);
+        } else {
+          return new SelectSaved(new DeclarationLHS(name, params),
+                                 ctx.NUMBER()
+                                    .stream()
+                                    .mapToInt(num -> parseNumeric(num.getText()))
+                                    .toArray());
+        }
+      } else {
+        return new SelectSaved(null, null);
+      }
     }
 
     @Override
@@ -121,13 +142,14 @@ public class Parser {
 
     @Override
     public Command<?> visitSave(CommandParser.SaveContext ctx) {
-      final String identifier = ctx.IDENTIFIER(1).getText();
-      final List<String> params = ctx.IDENTIFIER()
-                                     .subList(2, ctx.IDENTIFIER().size())
+      final CommandParser.DeclarationLHSContext lhs = ctx.declarationLHS();
+      final String identifier = lhs.IDENTIFIER(0).getText();
+      final List<String> params = lhs.IDENTIFIER()
                                      .stream()
+                                     .skip(1)
                                      .map(TerminalNode::getText)
-                                     .collect(Collectors.toList());
-      final String rhs = tokenStream.getText(ctx.roll());
+                                     .toList();
+      final String rhs = tokenStream.getText(ctx.rollExpression());
 
       return new Save(identifier, params, rhs);
     }

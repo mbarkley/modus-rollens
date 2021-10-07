@@ -14,7 +14,9 @@ public interface CommandEvent {
 
   @NotNull String getCommand();
 
-  void reply(String response);
+  void reply(@NotNull String response);
+
+  void reply(@NotNull Message message);
 
   void markIgnored();
 

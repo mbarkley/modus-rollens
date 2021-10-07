@@ -1,28 +1,38 @@
 package io.github.mbarkley.rollens.discord;
 
 import io.github.mbarkley.rollens.eval.Command;
+import io.github.mbarkley.rollens.eval.Command.ArgumentSelectOutput;
+import io.github.mbarkley.rollens.eval.Command.CommandSelectOutput;
 import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.internal.interactions.SelectionMenuImpl;
 import org.jdbi.v3.core.Jdbi;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 
 @Slf4j
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
+  public static final String COMMAND_SELECT_MENU_ID = "command-select-menu";
+  public static final String ARGUMENT_SELECTOR_ID = "argument-selector";
   private final Parser parser;
   private final Jdbi jdbi;
   private final ExecutorService executorService;
@@ -80,6 +90,13 @@ public class Bot extends ListenerAdapter {
     onCommandEvent(new MessageCommandEventAdapter(event));
   }
 
+  @Override
+  public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
+    switch (event.getComponentId()) {
+      case COMMAND_SELECT_MENU_ID, ARGUMENT_SELECTOR_ID -> onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
+    }
+  }
+
   private void onCommandEvent(CommandEvent event) {
     if (log.isDebugEnabled()) {
       if (event.isFromGuild()) {
@@ -105,15 +122,56 @@ public class Bot extends ListenerAdapter {
                   command
                       .execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom::current, event))
                       .whenComplete((Command.CommandOutput output, Throwable ex) -> {
-                        switch (output) {
+                        if (ex != null) {
+                          log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
+                          log.debug("Exception stacktrace", ex);
+                        } else switch (output) {
                           case StringOutput responseText -> {
-                            if (ex != null) {
-                              log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
-                              log.debug("Exception stacktrace", ex);
-                            } else {
-                              log.debug("Sending response text for message.id={}", event.getId());
-                              event.reply(responseText.value());
-                            }
+                            log.debug("Sending response text for message.id={}", event.getId());
+                            event.reply(responseText.value());
+                          }
+                          case CommandSelectOutput commandSelectOutput -> {
+                            log.debug("Sending command select for message.id={}", event.getId());
+                            final MessageBuilder builder = new MessageBuilder();
+                            builder.setContent(commandSelectOutput.prompt());
+                            List<SelectOption> options = commandSelectOutput.options()
+                                                                            .stream()
+                                                                            .map(option -> SelectOption.of(option.label(), option.selectExpression()))
+                                                                            .toList();
+                            builder.setActionRows(
+                                ActionRow.of(
+                                    new SelectionMenuImpl(
+                                        COMMAND_SELECT_MENU_ID,
+                                        "",
+                                        0,
+                                        1,
+                                        false,
+                                        options
+                                    )
+                                )
+                            );
+
+                            event.reply(builder.build());
+                          }
+                          case ArgumentSelectOutput argumentSelectOutput -> {
+                            log.debug("Sending response arg select for message.id={}", event.getId());
+                            final MessageBuilder builder = new MessageBuilder();
+                            builder.setContent(argumentSelectOutput.prompt());
+                            final SelectionMenuImpl argMenu = new SelectionMenuImpl(
+                                ARGUMENT_SELECTOR_ID,
+                                "0",
+                                1,
+                                1,
+                                false,
+                                IntStream.iterate(0, n -> n + 1)
+                                         .limit(21)
+                                         .mapToObj(String::valueOf)
+                                         .map(n -> SelectOption.of(n, argumentSelectOutput.selectExpression() + " " + n))
+                                         .toList()
+                            );
+                            builder.setActionRows(ActionRow.of(argMenu));
+
+                            event.reply(builder.build());
                           }
                         }
                       });

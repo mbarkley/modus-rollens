@@ -3,7 +3,6 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
-import lombok.Value;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,11 +64,7 @@ public class ParserTest {
     Assertions.assertEquals(Optional.empty(), parsed);
   }
 
-  @Value
-  private static class CommandTestCase {
-    String expression;
-    Command<?> command;
-
+  private record CommandTestCase(String expression, Command<?> command) {
     static CommandTestCase of(String expression, Command<?> command) {
       return new CommandTestCase(expression, command);
     }
@@ -81,10 +76,10 @@ public class ParserTest {
         CommandTestCase.of("foo", command),
         CommandTestCase.of("foo 1337 13", new Invoke("foo", new int[]{1337, 13}))
     ).flatMap(testCase -> Stream.of(
-        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
-        arguments("!mr roll " + testCase.getExpression(), testCase.getCommand()),
-        arguments("/mr " + testCase.getExpression(), testCase.getCommand()),
-        arguments("/mr roll " + testCase.getExpression(), testCase.getCommand())
+        arguments("!mr " + testCase.expression(), testCase.command()),
+        arguments("!mr roll " + testCase.expression(), testCase.command()),
+        arguments("/mr " + testCase.expression(), testCase.command()),
+        arguments("/mr roll " + testCase.expression(), testCase.command())
     ));
   }
 
@@ -92,8 +87,8 @@ public class ParserTest {
     return Stream.of(
         CommandTestCase.of("delete foo 3", new Delete("foo", 3))
     ).flatMap(testCase -> Stream.of(
-        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
-        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+        arguments("!mr " + testCase.expression(), testCase.command()),
+        arguments("/mr " + testCase.expression(), testCase.command())
     ));
   }
 
@@ -110,8 +105,8 @@ public class ParserTest {
         CommandTestCase
             .of("save foo a b c = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
     ).flatMap(testCase -> Stream.of(
-        arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
-        arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+        arguments("!mr " + testCase.expression(), testCase.command()),
+        arguments("/mr " + testCase.expression(), testCase.command())
     ));
   }
 
@@ -128,8 +123,8 @@ public class ParserTest {
             CommandTestCase.of("2d6 e4 ie4", null),
             CommandTestCase.of("2d6 r4 ir4", null)
         ).flatMap(testCase -> Stream.of(
-            arguments("!mr " + testCase.getExpression(), testCase.getCommand()),
-            arguments("/mr " + testCase.getExpression(), testCase.getCommand())
+            arguments("!mr " + testCase.expression(), testCase.command()),
+            arguments("/mr " + testCase.expression(), testCase.command())
         )),
         Stream.of(
             arguments("! mr 2d6", null),

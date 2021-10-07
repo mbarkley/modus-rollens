@@ -1,7 +1,9 @@
 package io.github.mbarkley.rollens.discord;
 
 import lombok.RequiredArgsConstructor;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -44,8 +46,13 @@ class SlashCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public void reply(String response) {
+  public void reply(@NotNull String response) {
     event.reply(response).queue();
+  }
+
+  @Override
+  public void reply(@NotNull Message message) {
+    event.reply(message).setEphemeral(true).queue();
   }
 
   @Override

@@ -11,12 +11,13 @@ command
     ;
 
 expression
-    : roll
+    : rollKeyword? roll
     | save
     | list
     | delete
     | help
-    | invocation
+    | select
+    | rollKeyword? invocation
     ;
 
 delete
@@ -25,13 +26,12 @@ delete
     ;
 
 invocation
-    : rollKeyword? IDENTIFIER (NUMBER)*
+    : IDENTIFIER (NUMBER)*
     ;
 
 save
     // save f arg1 arg2... = <expression>
-    : {getCurrentToken().getText().equals("save")}? IDENTIFIER IDENTIFIER (IDENTIFIER)* EQ roll
-    | {getCurrentToken().getText().equals("save")}? IDENTIFIER LB IDENTIFIER (IDENTIFIER)* RB EQ roll
+    : {getCurrentToken().getText().equals("save")}? IDENTIFIER declarationLHS EQ rollExpression
     ;
 
 help
@@ -42,8 +42,18 @@ list
     : {getCurrentToken().getText().equals("list")}? IDENTIFIER
     ;
 
+select
+    : {getCurrentToken().getText().equals("select")}? IDENTIFIER
+    | {getCurrentToken().getText().equals("select")}? IDENTIFIER declarationLHS NUMBER*
+    ;
+
+declarationLHS
+    : IDENTIFIER+
+    | LB IDENTIFIER+ RB
+    ;
+
 roll
-    : rollKeyword? rollExpression
+    : rollExpression
     ;
 
 rollKeyword

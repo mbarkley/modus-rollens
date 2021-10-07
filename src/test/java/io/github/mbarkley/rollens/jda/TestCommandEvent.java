@@ -4,10 +4,7 @@ import io.github.mbarkley.rollens.discord.CommandEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor
@@ -44,6 +41,11 @@ public class TestCommandEvent implements CommandEvent {
 
   @Override
   public void reply(String response) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void reply(@NotNull Message message) {
     throw new UnsupportedOperationException();
   }
 

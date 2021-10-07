@@ -60,4 +60,15 @@ public class SavedRoll {
 
     return sb.toString();
   }
+
+  public String toLHS() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append(rollName);
+    for (var param : getDecodedParameters()) {
+      sb.append(' ')
+        .append(param);
+    }
+
+    return sb.toString();
+  }
 }

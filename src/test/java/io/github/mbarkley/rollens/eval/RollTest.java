@@ -3,9 +3,9 @@ package io.github.mbarkley.rollens.eval;
 import io.github.mbarkley.rollens.db.DbUtil;
 import io.github.mbarkley.rollens.eval.Command.CommandOutput;
 import io.github.mbarkley.rollens.eval.Command.ExecutionContext;
+import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
-import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.parse.Parser;
 import lombok.Value;
 import org.jdbi.v3.core.Jdbi;
@@ -70,6 +70,7 @@ public class RollTest {
     final CommandOutput observed = executed.get();
     switch (observed) {
       case Command.StringOutput s -> Assertions.assertEquals(result, s.value());
+      default -> Assertions.fail("Unexpected output: " + observed);
     }
   }
 
@@ -86,6 +87,7 @@ public class RollTest {
     final CommandOutput observed = executed.get();
     switch (observed) {
       case Command.StringOutput s -> Assertions.assertEquals(result, s.value());
+      default -> Assertions.fail("Unexpected output: " + observed);
     }
   }
 
