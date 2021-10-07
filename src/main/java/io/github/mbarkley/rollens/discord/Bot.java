@@ -8,7 +8,6 @@ import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -98,9 +97,7 @@ public class Bot extends ListenerAdapter {
 
   @Override
   public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
-    switch (event.getComponentId()) {
-      case COMMAND_SELECT_MENU_ID -> onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
-    }
+    onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
   }
 
   @Override

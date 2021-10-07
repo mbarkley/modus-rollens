@@ -55,7 +55,7 @@ public class SelectSaved implements Command<CommandOutput> {
                                  .collect(Collectors.joining(" "));
     return completedFuture(
         new ArgumentSelectOutput(
-            "(%s %s): Select argument value for %s".formatted(declarationLHS.name(), parameterList, nextParam),
+            "Select `%s` for `%s %s`".formatted(nextParam, declarationLHS.name(), parameterList),
             declarationLHS.name(),
             declarationLHS.parameters(),
             "!mr select %s %s %s".formatted(declarationLHS.name(), parameterList, argList)
