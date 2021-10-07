@@ -8,6 +8,8 @@ import io.github.mbarkley.rollens.parse.Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -16,7 +18,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.internal.interactions.ButtonImpl;
 import net.dv8tion.jda.internal.interactions.SelectionMenuImpl;
 import org.jdbi.v3.core.Jdbi;
 import org.jetbrains.annotations.NotNull;
@@ -95,8 +99,13 @@ public class Bot extends ListenerAdapter {
   @Override
   public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
     switch (event.getComponentId()) {
-      case COMMAND_SELECT_MENU_ID, ARGUMENT_SELECTOR_ID -> onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
+      case COMMAND_SELECT_MENU_ID -> onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
     }
+  }
+
+  @Override
+  public void onButtonClick(@NotNull ButtonClickEvent event) {
+    onCommandEvent(new ButtonCommandEventAdapter(event));
   }
 
   private void onCommandEvent(CommandEvent event) {
@@ -159,19 +168,25 @@ public class Bot extends ListenerAdapter {
                             log.debug("Sending response arg select for message.id={}", event.getId());
                             final MessageBuilder builder = new MessageBuilder();
                             builder.setContent(argumentSelectOutput.prompt());
-                            final SelectionMenuImpl argMenu = new SelectionMenuImpl(
-                                ARGUMENT_SELECTOR_ID,
-                                "0",
-                                1,
-                                1,
-                                false,
+                            final List<ButtonImpl> buttons =
                                 IntStream.iterate(0, n -> n + 1)
-                                         .limit(21)
+                                         .limit(25)
                                          .mapToObj(String::valueOf)
-                                         .map(n -> SelectOption.of(n, argumentSelectOutput.selectExpression() + " " + n))
-                                         .toList()
+                                         .map(n -> new ButtonImpl(
+                                             argumentSelectOutput.selectExpression() + " " + n,
+                                             n,
+                                             ButtonStyle.SECONDARY,
+                                             false,
+                                             null))
+                                         .toList();
+
+                            builder.setActionRows(
+                                ActionRow.of(buttons.subList(0, 5)),
+                                ActionRow.of(buttons.subList(5, 10)),
+                                ActionRow.of(buttons.subList(10, 15)),
+                                ActionRow.of(buttons.subList(15, 20)),
+                                ActionRow.of(buttons.subList(20, 25))
                             );
-                            builder.setActionRows(ActionRow.of(argMenu));
 
                             event.reply(builder.build(), true);
                           }
