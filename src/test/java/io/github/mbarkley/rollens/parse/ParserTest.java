@@ -56,6 +56,14 @@ public class ParserTest {
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
+  @ParameterizedTest(name = "select \"{0}\" as {1}")
+  @MethodSource("selects")
+  public void should_parse_select(String input, Object result) {
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
+    Assertions.assertEquals(Optional.of(result), parsed);
+  }
+
   @ParameterizedTest(name = "bad expression \"{0}\"")
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
@@ -104,6 +112,19 @@ public class ParserTest {
             .of("save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}")),
         CommandTestCase
             .of("save foo a b c = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
+    ).flatMap(testCase -> Stream.of(
+        arguments("!mr " + testCase.expression(), testCase.command()),
+        arguments("/mr " + testCase.expression(), testCase.command())
+    ));
+  }
+
+  private static Stream<Arguments> selects() {
+    return Stream.of(
+        CommandTestCase.of("select", new SelectSaved(null, null)),
+        CommandTestCase.of("select foo", new SelectSaved(new DeclarationLHS("foo", List.of()), new int[0])),
+        CommandTestCase.of("select foo a b", new SelectSaved(new DeclarationLHS("foo", List.of("a", "b")), new int[0])),
+        CommandTestCase.of("select foo a b 1", new SelectSaved(new DeclarationLHS("foo", List.of("a", "b")), new int[] { 1 })),
+        CommandTestCase.of("select foo a b 1 2", new SelectSaved(new DeclarationLHS("foo", List.of("a", "b")), new int[] { 1, 2}))
     ).flatMap(testCase -> Stream.of(
         arguments("!mr " + testCase.expression(), testCase.command()),
         arguments("/mr " + testCase.expression(), testCase.command())

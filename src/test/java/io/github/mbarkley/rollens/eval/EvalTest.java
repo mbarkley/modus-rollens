@@ -122,13 +122,120 @@ public class EvalTest {
   }
 
   @Test
+  public void save_and_and_select_should_show_all_saved_in_guild() throws InterruptedException, ExecutionException, TimeoutException {
+    final List<Save> saves = List.of(
+        new Save("foo0",
+                 List.of(),
+                 "2d6"),
+        new Save("foo1",
+                 List.of("a"),
+                 "{a}d6"),
+        new Save("foo3",
+                 List.of("a", "b", "c"),
+                 "{a}d{b} t{c}")
+    );
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    final CompletableFuture[] futures = saves.stream()
+                                             .map(save -> save.execute(context))
+                                             .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
+
+    final Command.CommandOutput loaded = new SelectSaved(null, null).execute(context).get(1, TimeUnit.SECONDS);
+
+    if (loaded instanceof Command.CommandSelectOutput selectOutput) {
+      Assertions.assertEquals(
+          List.of(
+            new Command.Option("foo0", "!mr select foo0"),
+            new Command.Option("foo1 a", "!mr select foo1 a"),
+            new Command.Option("foo3 a b c", "!mr select foo3 a b c")
+          ),
+          selectOutput.options()
+      );
+    } else {
+      Assertions.fail("Expected %s but got %s".formatted(Command.CommandSelectOutput.class.getSimpleName(), loaded));
+    }
+  }
+
+  @Test
+  public void save_and_select_should_return_prompt_for_no_arg_function() throws InterruptedException, ExecutionException, TimeoutException {
+    final Save save = new Save("foo0",
+                               List.of(),
+                               "2d6");
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    save.execute(context).get(5, TimeUnit.SECONDS);
+
+    final Command.CommandOutput loaded = new SelectSaved(new DeclarationLHS("foo0", List.of()), new int[0])
+        .execute(context).get(1, TimeUnit.SECONDS);
+
+    if (loaded instanceof StringOutput stringOutput) {
+      Assertions.assertEquals("""
+                                  Evaluating: `2d6`
+                                  Test User roll: `[2, 1]`
+                                  Result: 3""",
+                              stringOutput.value());
+    } else {
+      Assertions.fail("Expected %s but got %s".formatted(Command.StringOutput.class.getSimpleName(), loaded));
+    }
+  }
+
+  @Test
+  public void save_and_select_should_return_prompt_until_all_args_defined() throws InterruptedException, ExecutionException, TimeoutException {
+    final Save save = new Save("foo2",
+                               List.of("a", "b"),
+                               "{a}d{b}");
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    save.execute(context).get(5, TimeUnit.SECONDS);
+
+    {
+      final Command.CommandOutput loaded = new SelectSaved(new DeclarationLHS("foo2", List.of("a", "b")), new int[0])
+          .execute(context).get(1, TimeUnit.SECONDS);
+
+      if (loaded instanceof Command.ArgumentSelectOutput selectOutput) {
+        Assertions.assertEquals("!mr select foo2 a b", selectOutput.selectExpression());
+        Assertions.assertEquals("foo2", selectOutput.name());
+        Assertions.assertEquals(List.of("a", "b"), selectOutput.parameters());
+      } else {
+        Assertions.fail("Expected %s but got %s".formatted(Command.ArgumentSelectOutput.class.getSimpleName(), loaded));
+      }
+    }
+
+    {
+      final Command.CommandOutput loaded = new SelectSaved(new DeclarationLHS("foo2", List.of("a", "b")), new int[]{2})
+          .execute(context).get(1, TimeUnit.SECONDS);
+
+      if (loaded instanceof Command.ArgumentSelectOutput selectOutput) {
+        Assertions.assertEquals("!mr select foo2 a b 2", selectOutput.selectExpression());
+        Assertions.assertEquals("foo2", selectOutput.name());
+        Assertions.assertEquals(List.of("a", "b"), selectOutput.parameters());
+      } else {
+        Assertions.fail("Expected %s but got %s".formatted(Command.ArgumentSelectOutput.class.getSimpleName(), loaded));
+      }
+    }
+
+    {
+      final Command.CommandOutput loaded = new SelectSaved(new DeclarationLHS("foo2", List.of("a", "b")), new int[]{2, 6})
+          .execute(context).get(1, TimeUnit.SECONDS);
+
+      if (loaded instanceof StringOutput stringOutput) {
+        Assertions.assertEquals("""
+                                    Evaluating: `2d6`
+                                    Test User roll: `[2, 1]`
+                                    Result: 3""",
+                                stringOutput.value());
+      } else {
+        Assertions.fail("Expected %s but got %s".formatted(Command.StringOutput.class.getSimpleName(), loaded));
+      }
+    }
+  }
+
+  @Test
   public void saving_in_guild_should_overwrite() throws InterruptedException, ExecutionException, TimeoutException {
     final Save firstSave = new Save("foo1",
-                             List.of("a"),
-                             "{a}d6");
+                                    List.of("a"),
+                                    "{a}d6");
     final Save secondSave = new Save("foo1",
-                             List.of("a"),
-                             "{a}d10");
+                                     List.of("a"),
+                                     "{a}d10");
     Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
     firstSave.execute(context)
              .thenCompose(output -> secondSave.execute(context))
@@ -190,7 +297,7 @@ public class EvalTest {
         arguments(
             new Random(1337),
             new Save("foo", List.of("n", "m"), "{n}d{m}"),
-            new Invoke("foo", new int[] {5, 10}),
+            new Invoke("foo", new int[]{5, 10}),
             """
                 Evaluating: `5d10`
                 Test User roll: `[2, 5, 10, 3, 10]`
@@ -199,7 +306,7 @@ public class EvalTest {
         arguments(
             new Random(1337),
             new Save("foo", List.of("n"), "{n}d{n}"),
-            new Invoke("foo", new int[] {10}),
+            new Invoke("foo", new int[]{10}),
             """
                 Evaluating: `10d10`
                 Test User roll: `[2, 5, 10, 3, 10, 9, 4, 5, 8, 8]`
@@ -208,7 +315,7 @@ public class EvalTest {
         arguments(
             new Random(1337),
             new Save("foo", List.of("n", "m", "t"), "{n}d{m} t{t} f1"),
-            new Invoke("foo", new int[] {5, 10, 6}),
+            new Invoke("foo", new int[]{5, 10, 6}),
             """
                 Evaluating: `5d10 t6 f1`
                 Test User roll: `[2, 5, 10, 3, 10]`
@@ -217,7 +324,7 @@ public class EvalTest {
         arguments(
             new Random(1337),
             new Save("foo", List.of("n", "m", "a"), "{n}d{m} + {a}"),
-            new Invoke("foo", new int[] {5, 10, 6}),
+            new Invoke("foo", new int[]{5, 10, 6}),
             """
                 Evaluating: `5d10 + 6`
                 Test User roll: `[2, 5, 10, 3, 10]`

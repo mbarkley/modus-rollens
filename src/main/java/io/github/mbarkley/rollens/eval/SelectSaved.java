@@ -51,14 +51,14 @@ public class SelectSaved implements Command<CommandOutput> {
 
     final String parameterList = String.join(" ", declarationLHS.parameters());
     final String argList = Arrays.stream(arguments)
-                                 .mapToObj(String::valueOf)
-                                 .collect(Collectors.joining(" "));
+                                 .mapToObj(" %d"::formatted)
+                                 .collect(Collectors.joining());
     return completedFuture(
         new ArgumentSelectOutput(
             "Select `%s` for `%s %s`".formatted(nextParam, declarationLHS.name(), parameterList),
             declarationLHS.name(),
             declarationLHS.parameters(),
-            "!mr select %s %s %s".formatted(declarationLHS.name(), parameterList, argList)
+            "!mr select %s %s%s".formatted(declarationLHS.name(), parameterList, argList)
         )
     );
   }
