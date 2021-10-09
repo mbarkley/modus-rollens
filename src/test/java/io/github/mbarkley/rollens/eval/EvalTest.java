@@ -335,6 +335,7 @@ public class EvalTest {
 
   private static Stream<Arguments> guildOnlyCommands() {
     return Stream.of(
+        arguments(new SelectSaved(null, null), "Cannot save and list rolls in direct messages"),
         arguments(new Save("foo", List.of(), "2d6"), "Cannot save rolls in direct messages"),
         arguments(new ListSaved(), "Cannot save and list rolls in direct messages"),
         arguments(new Delete("foo", 0), "Cannot delete rolls in direct messages"),
