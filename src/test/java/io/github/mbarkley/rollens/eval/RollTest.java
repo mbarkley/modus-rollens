@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -103,7 +104,7 @@ public class RollTest {
   }
 
   private static Stream<Arguments> rolls() {
-    return Stream.of(
+    final List<RollTestCase> testCases = List.of(
         // sum rolls
         RollTestCase.of(1337, "2d6", """
             Test User roll: `[2, 1]`
@@ -352,11 +353,14 @@ public class RollTest {
         RollTestCase.of(1337, "d10 * (2 + 3) / 2", """
             Test User roll: `[2]`
             Result: 5""")
-    ).flatMap(testCase -> Stream.of(
-        arguments(new Random(testCase.getSeed()), "!mr " + testCase.getRoll(), testCase.getResult()),
-        arguments(new Random(testCase.getSeed()), "!mr roll " + testCase.getRoll(), testCase.getResult()),
-        arguments(new Random(testCase.getSeed()), "/mr " + testCase.getRoll(), testCase.getResult()),
-        arguments(new Random(testCase.getSeed()), "/mr roll " + testCase.getRoll(), testCase.getResult())
-    ));
+    );
+    return Stream.concat(
+        testCases.stream().map(testCase -> arguments(new Random(testCase.getSeed()), "!mr " + testCase.getRoll(), testCase.getResult())),
+        testCases.stream().limit(1).flatMap(testCase -> Stream.of(
+            arguments(new Random(testCase.getSeed()), "!mr roll " + testCase.getRoll(), testCase.getResult()),
+            arguments(new Random(testCase.getSeed()), "/mr " + testCase.getRoll(), testCase.getResult()),
+            arguments(new Random(testCase.getSeed()), "/mr roll " + testCase.getRoll(), testCase.getResult())
+        ))
+    );
   }
 }
