@@ -34,11 +34,6 @@ class ButtonCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public @NotNull String getCommand() {
-    return event.getComponentId();
-  }
-
-  @Override
   public void reply(@NotNull Message message, boolean intermediate) {
     if (event.getMessage().isEphemeral() && !intermediate) {
       final MessageBuilder builder = new MessageBuilder();
@@ -50,9 +45,4 @@ class ButtonCommandEventAdapter implements CommandEvent {
     }
   }
 
-  @Override
-  public void markIgnored() {
-    event.reply("Could not process selection [%s]."
-                    .formatted(String.join(", ", event.getComponentId()))).queue();
-  }
 }

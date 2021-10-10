@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -90,112 +92,123 @@ public class Bot extends ListenerAdapter {
 
   @Override
   public void onSlashCommand(@NotNull SlashCommandEvent event) {
-    onCommandEvent(new SlashCommandEventAdapter(event));
+    final String input = """
+        /%s %s""".formatted(
+        event.getCommandPath().replace('/', ' '),
+        event.getOptions().stream().map(OptionMapping::getAsString).collect(Collectors.joining(" "))
+    );
+    parser.parse(input)
+          .ifPresentOrElse(
+              command -> processCommand(new SlashCommandEventAdapter(event), command),
+              () -> event.reply("Could not recognize %s command. See `/mr help` for valid examples."
+                                    .formatted(event.getSubcommandName())).queue());
   }
 
   @Override
   public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-    onCommandEvent(new MessageCommandEventAdapter(event));
+    final String input = event.getMessage().getContentRaw();
+    parser.parse(input)
+          .ifPresent(
+              command -> processCommand(new MessageCommandEventAdapter(event), command));
   }
 
   @Override
   public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
-    onCommandEvent(new CommandSelectMenuCommandEventAdapter(event));
+    if (event.getValues().size() == 1) {
+      final String commandString = event.getValues().get(0);
+      parser.parse(commandString)
+            .ifPresentOrElse(
+                command -> processCommand(new CommandSelectMenuCommandEventAdapter(event), command),
+                () -> event.reply("Could not process selection [%s]."
+                                      .formatted(String.join(", ", event.getValues()))).queue());
+    } else {
+      log.warn("Select menu returned with too many values selected");
+    }
   }
 
   @Override
   public void onButtonClick(@NotNull ButtonClickEvent event) {
-    onCommandEvent(new ButtonCommandEventAdapter(event));
-  }
-
-  private void onCommandEvent(CommandEvent event) {
-    if (log.isDebugEnabled()) {
-      if (event.isFromGuild()) {
-        log.debug("Parsing command from guild/channel=[{}/{}]",
-                  event.getGuild().getName(),
-                  event.getChannel().getName());
-      } else {
-        log.debug("Parsing DM from user=[{}]", event.getUser().getId());
-      }
-    }
-    final String input = event.getCommand();
+    final String input = event.getComponentId();
     parser.parse(input)
           .ifPresentOrElse(
-              command -> {
-                try {
-                  if (event.isFromGuild()) {
-                    log.info("Executing guild/channel/command=[{}/{}/{}]",
-                             event.getGuild().getId(),
-                             event.getChannel().getId(), command);
-                  } else {
-                    log.info("Executing user/command=[{}/{}]", event.getUser().getId(), command);
-                  }
-                  command
-                      .execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom::current, event))
-                      .whenComplete((Command.CommandOutput output, Throwable ex) -> {
-                        if (ex != null) {
-                          log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
-                          log.debug("Exception stacktrace", ex);
-                        } else switch (output) {
-                          case StringOutput responseText -> {
-                            log.debug("Sending response text for message.id={}", event.getId());
-                            event.reply(responseText.value());
-                          }
-                          case CommandSelectOutput commandSelectOutput -> {
-                            log.debug("Sending command select for message.id={}", event.getId());
-                            final MessageBuilder builder = new MessageBuilder();
-                            builder.setContent(commandSelectOutput.prompt());
-                            List<SelectOption> options = commandSelectOutput.options()
-                                                                            .stream()
-                                                                            .map(option -> SelectOption.of(option.label(), option.selectExpression()))
-                                                                            .toList();
-                            builder.setActionRows(
-                                ActionRow.of(
-                                    new SelectionMenuImpl(
-                                        COMMAND_SELECT_MENU_ID,
-                                        "",
-                                        0,
-                                        1,
-                                        false,
-                                        options
-                                    )
-                                )
-                            );
+              command -> processCommand(new ButtonCommandEventAdapter(event), command),
+              () -> event.reply("Could not process selection [%s]."
+                                    .formatted(String.join(", ", event.getComponentId()))).queue());
+  }
 
-                            event.reply(builder.build(), true);
-                          }
-                          case ArgumentSelectOutput argumentSelectOutput -> {
-                            log.debug("Sending response arg select for message.id={}", event.getId());
-                            final MessageBuilder builder = new MessageBuilder();
-                            builder.setContent(argumentSelectOutput.prompt());
-                            final List<ButtonImpl> buttons =
-                                IntStream.iterate(0, n -> n + 1)
-                                         .limit(25)
-                                         .mapToObj(String::valueOf)
-                                         .map(n -> new ButtonImpl(
-                                             argumentSelectOutput.selectExpression() + " " + n,
-                                             n,
-                                             ButtonStyle.SECONDARY,
-                                             false,
-                                             null))
-                                         .toList();
+  private void processCommand(CommandEvent event, Command<?> command) {
+    try {
+      if (event.isFromGuild()) {
+        log.info("Executing guild/channel/command=[{}/{}/{}]",
+                 event.getGuild().getId(),
+                 event.getChannel().getId(), command);
+      } else {
+        log.info("Executing user/command=[{}/{}]", event.getUser().getId(), command);
+      }
+      command
+          .execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom::current, event))
+          .whenComplete((Command.CommandOutput output, Throwable ex) -> {
+            if (ex != null) {
+              log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());
+              log.debug("Exception stacktrace", ex);
+            } else switch (output) {
+              case StringOutput responseText -> {
+                log.debug("Sending response text for message.id={}", event.getId());
+                event.reply(responseText.value());
+              }
+              case CommandSelectOutput commandSelectOutput -> {
+                log.debug("Sending command select for message.id={}", event.getId());
+                final MessageBuilder builder = new MessageBuilder();
+                builder.setContent(commandSelectOutput.prompt());
+                List<SelectOption> options = commandSelectOutput.options()
+                                                                .stream()
+                                                                .map(option -> SelectOption.of(option.label(), option.selectExpression()))
+                                                                .toList();
+                builder.setActionRows(
+                    ActionRow.of(
+                        new SelectionMenuImpl(
+                            COMMAND_SELECT_MENU_ID,
+                            "",
+                            0,
+                            1,
+                            false,
+                            options
+                        )
+                    )
+                );
 
-                            builder.setActionRows(
-                                ActionRow.of(buttons.subList(0, 5)),
-                                ActionRow.of(buttons.subList(5, 10)),
-                                ActionRow.of(buttons.subList(10, 15)),
-                                ActionRow.of(buttons.subList(15, 20)),
-                                ActionRow.of(buttons.subList(20, 25))
-                            );
+                event.reply(builder.build(), true);
+              }
+              case ArgumentSelectOutput argumentSelectOutput -> {
+                log.debug("Sending response arg select for message.id={}", event.getId());
+                final MessageBuilder builder = new MessageBuilder();
+                builder.setContent(argumentSelectOutput.prompt());
+                final List<ButtonImpl> buttons =
+                    IntStream.iterate(0, n -> n + 1)
+                             .limit(25)
+                             .mapToObj(String::valueOf)
+                             .map(n -> new ButtonImpl(
+                                 argumentSelectOutput.selectExpression() + " " + n,
+                                 n,
+                                 ButtonStyle.SECONDARY,
+                                 false,
+                                 null))
+                             .toList();
 
-                            event.reply(builder.build(), true);
-                          }
-                        }
-                      });
-                } catch (Exception e) {
-                  log.warn(format("Error while executing command message.id=%s", event.getId()), e);
-                }
-              },
-              event::markIgnored);
+                builder.setActionRows(
+                    ActionRow.of(buttons.subList(0, 5)),
+                    ActionRow.of(buttons.subList(5, 10)),
+                    ActionRow.of(buttons.subList(10, 15)),
+                    ActionRow.of(buttons.subList(15, 20)),
+                    ActionRow.of(buttons.subList(20, 25))
+                );
+
+                event.reply(builder.build(), true);
+              }
+            }
+          });
+    } catch (Exception e) {
+      log.warn(format("Error while executing command message.id=%s", event.getId()), e);
+    }
   }
 }

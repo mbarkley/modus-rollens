@@ -13,8 +13,6 @@ public interface CommandEvent {
 
   Member getMember();
 
-  @NotNull String getCommand();
-
   void reply(@NotNull Message message, boolean intermediate);
 
   default void reply(@NotNull String response) {
@@ -22,8 +20,6 @@ public interface CommandEvent {
     builder.setContent(response);
     reply(builder.build(), false);
   }
-
-  void markIgnored();
 
   default boolean isFromGuild() {
     return ChannelType.TEXT.equals(getChannel().getType());

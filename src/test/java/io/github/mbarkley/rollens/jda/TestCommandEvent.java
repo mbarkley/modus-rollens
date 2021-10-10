@@ -17,8 +17,6 @@ public class TestCommandEvent implements CommandEvent {
   @Getter
   private Guild guild;
 
-  private final String content;
-
   @Override
   public @NotNull String getId() {
     return "test123";
@@ -35,22 +33,12 @@ public class TestCommandEvent implements CommandEvent {
   }
 
   @Override
-  public @NotNull String getCommand() {
-    return content;
-  }
-
-  @Override
   public void reply(@NotNull String response) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void reply(@NotNull Message message, boolean intermediate) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void markIgnored() {
     throw new UnsupportedOperationException();
   }
 

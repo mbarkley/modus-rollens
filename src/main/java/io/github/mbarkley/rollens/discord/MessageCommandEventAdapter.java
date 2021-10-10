@@ -33,17 +33,7 @@ class MessageCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public @NotNull String getCommand() {
-    return event.getMessage().getContentRaw();
-  }
-
-  @Override
   public void reply(@NotNull Message message, boolean intermediate) {
     event.getMessage().reply(message).queue();
-  }
-
-  @Override
-  public void markIgnored() {
-    // Messages in channels are usually not directed at us, so we do nothing
   }
 }

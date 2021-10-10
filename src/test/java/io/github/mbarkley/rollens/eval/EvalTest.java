@@ -41,7 +41,7 @@ public class EvalTest {
 
   @BeforeEach
   public void setup() throws IOException {
-    testCommandEvent = new TestCommandEvent("");
+    testCommandEvent = new TestCommandEvent();
     final TestMember member = new TestMember();
     member.setNickname("Test User");
     testCommandEvent.setMember(member);

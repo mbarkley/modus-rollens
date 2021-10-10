@@ -34,15 +34,6 @@ class CommandSelectMenuCommandEventAdapter implements CommandEvent {
   }
 
   @Override
-  public @NotNull String getCommand() {
-    if (event.getValues().size() == 1) {
-      return event.getValues().get(0);
-    } else {
-      throw new IllegalStateException();
-    }
-  }
-
-  @Override
   public void reply(@NotNull Message message, boolean intermediate) {
     if (event.getMessage().isEphemeral() && !intermediate) {
       final MessageBuilder builder = new MessageBuilder();
@@ -52,11 +43,5 @@ class CommandSelectMenuCommandEventAdapter implements CommandEvent {
     } else {
       event.editMessage(message).queue();
     }
-  }
-
-  @Override
-  public void markIgnored() {
-    event.reply("Could not process selection [%s]."
-                    .formatted(String.join(", ", event.getValues()))).queue();
   }
 }
