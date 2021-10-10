@@ -47,7 +47,7 @@ public class Main {
 
     // This can take up to an hour to take affect
     jda.updateCommands()
-       .addCommands(bot.getSlashCommands())
+       .addCommands(slashCommandParser.getSlashCommands())
        .queue();
   }
 
