@@ -2,7 +2,8 @@ package io.github.mbarkley.rollens;
 
 import io.github.mbarkley.rollens.db.DbUtil;
 import io.github.mbarkley.rollens.discord.Bot;
-import io.github.mbarkley.rollens.parse.Parser;
+import io.github.mbarkley.rollens.parse.SlashCommandParser;
+import io.github.mbarkley.rollens.parse.TextParser;
 import io.github.mbarkley.rollens.util.EnvUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -30,7 +31,9 @@ public class Main {
 
     // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
     // All other events will be disabled.
-    final Bot bot = new Bot(new Parser(), jdbi, Executors.newCachedThreadPool());
+    final TextParser textParser = new TextParser();
+    final SlashCommandParser slashCommandParser = new SlashCommandParser(textParser);
+    final Bot bot = new Bot(textParser, slashCommandParser, jdbi, Executors.newCachedThreadPool());
     final JDA jda = JDABuilder.create(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
                               .disableCache(CacheFlag.ACTIVITY,
                                             CacheFlag.VOICE_STATE,

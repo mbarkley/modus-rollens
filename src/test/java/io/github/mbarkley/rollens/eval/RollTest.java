@@ -6,8 +6,7 @@ import io.github.mbarkley.rollens.eval.Command.ExecutionContext;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
-import io.github.mbarkley.rollens.parse.Parser;
-import lombok.Value;
+import io.github.mbarkley.rollens.parse.TextParser;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -35,7 +34,7 @@ public class RollTest {
   TestCommandEvent testCommandEvent;
   Jdbi jdbi;
   ExecutorService executorService;
-  Parser parser;
+  TextParser textParser;
 
   @BeforeEach
   public void setup() throws IOException {
@@ -50,7 +49,7 @@ public class RollTest {
     jdbi = DbUtil.initDb(dbFile.getAbsolutePath());
     executorService = Executors.newFixedThreadPool(10);
 
-    parser = new Parser();
+    textParser = new TextParser();
   }
 
   @AfterEach
@@ -62,9 +61,9 @@ public class RollTest {
   @ParameterizedTest(name = "roll \"{1}\" as {2}")
   @MethodSource("rolls")
   public void should_parse_and_execute_roll_in_guild(Random rand, String input, String result) throws InterruptedException, ExecutionException {
-    final Optional<Command<?>> parsed = parser.parse(input);
+    final Optional<Command<?>> parsed = textParser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, textParser, () -> rand, testCommandEvent);
     final CompletableFuture<? extends CommandOutput> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                                       .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
@@ -79,9 +78,9 @@ public class RollTest {
   @ParameterizedTest(name = "roll \"{1}\" should have result \"{2}\"")
   public void should_parse_and_execute_roll_in_direct_message(Random rand, String input, String result) throws ExecutionException, InterruptedException {
     testCommandEvent.setGuild(null);
-    final Optional<Command<?>> parsed = parser.parse(input);
+    final Optional<Command<?>> parsed = textParser.parse(input);
     Assertions.assertNotEquals(Optional.empty(), parsed);
-    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    ExecutionContext ctx = new ExecutionContext(executorService, jdbi, textParser, () -> rand, testCommandEvent);
     final CompletableFuture<? extends CommandOutput> executed = parsed.orElseThrow(() -> new AssertionError(""))
                                                                       .execute(ctx);
     Assertions.assertTrue(executed.isDone(), "Returned future is not complete");
@@ -92,12 +91,7 @@ public class RollTest {
     }
   }
 
-  @Value
-  private static class RollTestCase {
-    long seed;
-    String roll;
-    String result;
-
+  private record RollTestCase(long seed, String roll, String result) {
     static RollTestCase of(long seed, String roll, String result) {
       return new RollTestCase(seed, roll, result);
     }
@@ -355,11 +349,11 @@ public class RollTest {
             Result: 5""")
     );
     return Stream.concat(
-        testCases.stream().map(testCase -> arguments(new Random(testCase.getSeed()), "!mr " + testCase.getRoll(), testCase.getResult())),
+        testCases.stream().map(testCase -> arguments(new Random(testCase.seed()), "!mr " + testCase.roll(), testCase.result())),
         testCases.stream().limit(1).flatMap(testCase -> Stream.of(
-            arguments(new Random(testCase.getSeed()), "!mr roll " + testCase.getRoll(), testCase.getResult()),
-            arguments(new Random(testCase.getSeed()), "/mr " + testCase.getRoll(), testCase.getResult()),
-            arguments(new Random(testCase.getSeed()), "/mr roll " + testCase.getRoll(), testCase.getResult())
+            arguments(new Random(testCase.seed()), "!mr roll " + testCase.roll(), testCase.result()),
+            arguments(new Random(testCase.seed()), "/mr " + testCase.roll(), testCase.result()),
+            arguments(new Random(testCase.seed()), "/mr roll " + testCase.roll(), testCase.result())
         ))
     );
   }

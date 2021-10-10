@@ -5,7 +5,7 @@ import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import io.github.mbarkley.rollens.jda.TestCommandEvent;
 import io.github.mbarkley.rollens.jda.TestGuild;
 import io.github.mbarkley.rollens.jda.TestMember;
-import io.github.mbarkley.rollens.parse.Parser;
+import io.github.mbarkley.rollens.parse.TextParser;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,14 +24,14 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EvalTest {
   static ExecutorService executorService;
-  static Parser parser;
+  static TextParser textParser;
   TestCommandEvent testCommandEvent;
   Jdbi jdbi;
 
   @BeforeAll
   public static void onetimeSetup() {
     executorService = Executors.newCachedThreadPool();
-    parser = new Parser();
+    textParser = new TextParser();
   }
 
   @AfterAll
@@ -66,7 +66,7 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
 
     // do saves
     final CompletableFuture[] futures = saves.stream()
@@ -109,7 +109,7 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     final CompletableFuture[] futures = saves.stream()
                                              .map(save -> save.execute(context))
                                              .toArray(CompletableFuture[]::new);
@@ -138,7 +138,7 @@ public class EvalTest {
                  List.of("a", "b", "c"),
                  "{a}d{b} t{c}")
     );
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     final CompletableFuture[] futures = saves.stream()
                                              .map(save -> save.execute(context))
                                              .toArray(CompletableFuture[]::new);
@@ -165,7 +165,7 @@ public class EvalTest {
     final Save save = new Save("foo0",
                                List.of(),
                                "2d6");
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     save.execute(context).get(5, TimeUnit.SECONDS);
 
     final Command.CommandOutput loaded = new SelectSaved(new DeclarationLHS("foo0", List.of()), new int[0])
@@ -187,7 +187,7 @@ public class EvalTest {
     final Save save = new Save("foo2",
                                List.of("a", "b"),
                                "{a}d{b}");
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     save.execute(context).get(5, TimeUnit.SECONDS);
 
     {
@@ -240,7 +240,7 @@ public class EvalTest {
     final Save secondSave = new Save("foo1",
                                      List.of("a"),
                                      "{a}d10");
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     firstSave.execute(context)
              .thenCompose(output -> secondSave.execute(context))
              .get(5, TimeUnit.SECONDS);
@@ -260,7 +260,7 @@ public class EvalTest {
       Random rand,
       List<Command<?>> commands,
       String expectedListOutput) throws InterruptedException, ExecutionException, TimeoutException {
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> rand, testCommandEvent);
     final CompletableFuture[] futures = commands.stream()
                                                 .map(command -> command.execute(context))
                                                 .toArray(CompletableFuture[]::new);
@@ -279,7 +279,7 @@ public class EvalTest {
       List<Command<?>> setupCommands,
       SelectSaved selectCommand,
       String annotationText) throws InterruptedException, ExecutionException, TimeoutException {
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> rand, testCommandEvent);
     final CompletableFuture[] futures = setupCommands.stream()
                                                 .map(command -> command.execute(context))
                                                 .toArray(CompletableFuture[]::new);
@@ -313,7 +313,7 @@ public class EvalTest {
     // Setup
     save_and_list_in_guild_should_show_all_saved();
     testCommandEvent.setGuild(new TestGuild(321));
-    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
 
     Assertions.assertEquals("""
@@ -326,7 +326,7 @@ public class EvalTest {
   @ParameterizedTest(name = "invoking \"{0}\" should have failure message \"{1}\"")
   public void should_invoke_saved_roll_in_guild(Command<StringOutput> command, String result) throws InterruptedException, ExecutionException, TimeoutException {
     testCommandEvent.setGuild(null);
-    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> new Random(1337), testCommandEvent);
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> new Random(1337), testCommandEvent);
     final StringOutput observed = command.execute(context).get(1, TimeUnit.SECONDS);
     Assertions.assertEquals(result, observed.value());
   }
@@ -334,7 +334,7 @@ public class EvalTest {
   @MethodSource("invocations")
   @ParameterizedTest(name = "invoking \"{2}\" should have result \"{3}\"")
   public void should_invoke_saved_roll_in_guild(Random rand, Save save, Invoke invoke, String result) throws InterruptedException, ExecutionException, TimeoutException {
-    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    final Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, textParser, () -> rand, testCommandEvent);
     // setup
     save.execute(context).get(1, TimeUnit.SECONDS);
     // test

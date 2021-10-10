@@ -4,7 +4,8 @@ import io.github.mbarkley.rollens.eval.Command;
 import io.github.mbarkley.rollens.eval.Command.ArgumentSelectOutput;
 import io.github.mbarkley.rollens.eval.Command.CommandSelectOutput;
 import io.github.mbarkley.rollens.eval.Command.StringOutput;
-import io.github.mbarkley.rollens.parse.Parser;
+import io.github.mbarkley.rollens.parse.SlashCommandParser;
+import io.github.mbarkley.rollens.parse.TextParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.MessageBuilder;
@@ -25,10 +26,10 @@ import net.dv8tion.jda.internal.interactions.SelectionMenuImpl;
 import org.jdbi.v3.core.Jdbi;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -41,7 +42,8 @@ public class Bot extends ListenerAdapter {
   public static final String ARITY_OPTION_DESCRIPTION = "The number of parameters in the saved roll";
   public static final String ROLL_NAME_OPTION_NAME = "roll-name";
   public static final String ROLL_NAME_OPTION_DESCRIPTION = "The name of a saved roll";
-  private final Parser parser;
+  private final TextParser textParser;
+  private final SlashCommandParser slashCommandParser;
   private final Jdbi jdbi;
   private final ExecutorService executorService;
 
@@ -92,23 +94,40 @@ public class Bot extends ListenerAdapter {
 
   @Override
   public void onSlashCommand(@NotNull SlashCommandEvent event) {
-    final String input = """
-        /%s %s""".formatted(
-        event.getCommandPath().replace('/', ' '),
-        event.getOptions().stream().map(OptionMapping::getAsString).collect(Collectors.joining(" "))
-    );
-    parser.parse(input)
-          .ifPresentOrElse(
-              command -> processCommand(new SlashCommandEventAdapter(event), command),
-              () -> event.reply("Could not recognize %s command. See `/mr help` for valid examples."
-                                    .formatted(event.getSubcommandName())).queue());
+    final List<String> path = Arrays.asList(event.getCommandPath().split("/"));
+    final List<SlashCommandParser.Option<?>> options =
+        event.getOptions()
+             .stream()
+             .map(optionMapping -> switch (optionMapping.getType()) {
+               case STRING -> convertStringOption(optionMapping);
+               case INTEGER -> convertIntegerOption(optionMapping);
+               default -> throw new IllegalStateException("Unexpected value: " + optionMapping.getType());
+             })
+             .toList();
+    try {
+      processCommand(
+          new SlashCommandEventAdapter(event),
+          slashCommandParser.parse(new SlashCommandParser.SlashCommand(path, options)));
+    } catch (SlashCommandParser.InvalidSlashCommand e) {
+      event.reply(e.getMessage()).queue();
+    }
+  }
+
+  @NotNull
+  private SlashCommandParser.Option<Long> convertIntegerOption(OptionMapping optionMapping) {
+    return new SlashCommandParser.Option<>(optionMapping.getName(), optionMapping.getAsLong());
+  }
+
+  @NotNull
+  private SlashCommandParser.Option<?> convertStringOption(OptionMapping optionMapping) {
+    return new SlashCommandParser.Option<>(optionMapping.getName(), optionMapping.getAsString());
   }
 
   @Override
   public void onMessageReceived(@NotNull MessageReceivedEvent event) {
     final String input = event.getMessage().getContentRaw();
-    parser.parse(input)
-          .ifPresent(
+    textParser.parse(input)
+              .ifPresent(
               command -> processCommand(new MessageCommandEventAdapter(event), command));
   }
 
@@ -116,8 +135,8 @@ public class Bot extends ListenerAdapter {
   public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
     if (event.getValues().size() == 1) {
       final String commandString = event.getValues().get(0);
-      parser.parse(commandString)
-            .ifPresentOrElse(
+      textParser.parse(commandString)
+                .ifPresentOrElse(
                 command -> processCommand(new CommandSelectMenuCommandEventAdapter(event), command),
                 () -> event.reply("Could not process selection [%s]."
                                       .formatted(String.join(", ", event.getValues()))).queue());
@@ -129,8 +148,8 @@ public class Bot extends ListenerAdapter {
   @Override
   public void onButtonClick(@NotNull ButtonClickEvent event) {
     final String input = event.getComponentId();
-    parser.parse(input)
-          .ifPresentOrElse(
+    textParser.parse(input)
+              .ifPresentOrElse(
               command -> processCommand(new ButtonCommandEventAdapter(event), command),
               () -> event.reply("Could not process selection [%s]."
                                     .formatted(String.join(", ", event.getComponentId()))).queue());
@@ -146,7 +165,7 @@ public class Bot extends ListenerAdapter {
         log.info("Executing user/command=[{}/{}]", event.getUser().getId(), command);
       }
       command
-          .execute(new Command.ExecutionContext(executorService, jdbi, parser, ThreadLocalRandom::current, event))
+          .execute(new Command.ExecutionContext(executorService, jdbi, textParser, ThreadLocalRandom::current, event))
           .whenComplete((Command.CommandOutput output, Throwable ex) -> {
             if (ex != null) {
               log.warn("Encountered error for message.id={}: {}", event.getId(), ex.getMessage());

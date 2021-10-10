@@ -1,7 +1,7 @@
 package io.github.mbarkley.rollens.eval;
 
 import io.github.mbarkley.rollens.discord.CommandEvent;
-import io.github.mbarkley.rollens.parse.Parser;
+import io.github.mbarkley.rollens.parse.TextParser;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public interface Command<T extends Command.CommandOutput> {
 
   record ExecutionContext(ExecutorService executorService,
                           Jdbi jdbi,
-                          Parser parser,
+                          TextParser textParser,
                           Supplier<Random> rand,
                           CommandEvent commandEvent) {
     public Random getRand() {

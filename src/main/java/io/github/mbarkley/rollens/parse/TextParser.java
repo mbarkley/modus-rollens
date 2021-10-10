@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class Parser {
+public class TextParser {
   private static final Pattern DICE = Pattern.compile("(\\d+)?[dD](\\d+)");
 
   public Optional<Command<?>> parse(String input) {

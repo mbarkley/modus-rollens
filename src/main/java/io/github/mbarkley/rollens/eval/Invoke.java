@@ -49,7 +49,7 @@ public class Invoke implements Command<StringOutput> {
     }, context.executorService()).thenCompose(savedRoll -> {
       final String expressionWithArgs = getSubstitutedExpression(savedRoll);
 
-      final Optional<RollCommand> parsed = context.parser().parseRoll(expressionWithArgs);
+      final Optional<RollCommand> parsed = context.textParser().parseRoll(expressionWithArgs);
       RollCommand rollCommand = parsed
           .orElseThrow(() -> new InvalidExpressionException(
               format("Expression invalid after argument substitution: `%s`",
