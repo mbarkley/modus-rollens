@@ -27,7 +27,8 @@ public interface Command<T extends Command.CommandOutput> {
     }
   }
 
-  sealed interface CommandOutput permits ArgumentSelectOutput, CommandSelectOutput, StringOutput {}
+  sealed interface CommandOutput permits ArgumentSelectOutput, CommandSelectOutput, StringOutput {
+  }
 
   record StringOutput(String value) implements CommandOutput {}
 

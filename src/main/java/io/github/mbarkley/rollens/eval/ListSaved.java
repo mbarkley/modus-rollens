@@ -1,12 +1,11 @@
 package io.github.mbarkley.rollens.eval;
 
-import io.github.mbarkley.rollens.db.SavedRoll;
+import io.github.mbarkley.rollens.db.AnnotatedSavedRoll;
 import io.github.mbarkley.rollens.db.SavedRollsDao;
 import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import org.jdbi.v3.core.Handle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
@@ -32,22 +31,22 @@ public class ListSaved implements Command<StringOutput> {
   @NotNull
   private CompletableFuture<StringOutput> doList(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.jdbi().open()) {
-        long guildId = context.commandEvent().getGuild().getIdLong();
-        final List<SavedRoll> savedRolls = handle.attach(SavedRollsDao.class)
-                                                 .findByGuild(guildId);
-        savedRolls.sort(Comparator.comparing(SavedRoll::getRollName));
+      long guildId = context.commandEvent().getGuild().getIdLong();
+      final List<AnnotatedSavedRoll> savedRolls = context.jdbi()
+                                                         .withExtension(
+                                                             SavedRollsDao.class,
+                                                             dao -> dao.findAnnotatedByGuild(guildId));
+      savedRolls.sort(Comparator.naturalOrder());
 
-        final StringBuilder sb = new StringBuilder();
-        sb.append("__Saved Rolls__");
-        if (savedRolls.isEmpty()) {
-          sb.append("\nNo saved rolls");
-        } else for (var savedRoll : savedRolls) {
-          sb.append("\n`").append(savedRoll.toAssignmentString()).append('`');
-        }
-
-        return new StringOutput(sb.toString());
+      final StringBuilder sb = new StringBuilder();
+      sb.append("__Saved Rolls__");
+      if (savedRolls.isEmpty()) {
+        sb.append("\nNo saved rolls");
+      } else for (AnnotatedSavedRoll savedRoll : savedRolls) {
+        sb.append("\n`").append(savedRoll.toAssignmentString()).append('`');
       }
+
+      return new StringOutput(sb.toString());
     }, context.executorService());
   }
 }

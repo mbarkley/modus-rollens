@@ -90,9 +90,20 @@ public class Parser {
         case 4 -> visitDelete(ctx.delete());
         case 5 -> visitHelp(ctx.help());
         case 6 -> visitSelect(ctx.select());
-        case 7 -> visitInvocation(ctx.invocation());
+        case 7 -> visitAnnotate(ctx.annotate());
+        case 8 -> visitInvocation(ctx.invocation());
         default -> throw new IllegalStateException("Unknown alt number " + ctx.getAltNumber());
       });
+    }
+
+    @Override
+    public Command<?> visitAnnotate(CommandParser.AnnotateContext ctx) {
+      return new Annotate(
+          ctx.function.getText(),
+          ctx.arity != null ? parseNumeric(ctx.arity.getText()) : null,
+          ctx.parameter != null ? ctx.parameter.getText() : null,
+          ctx.ANNOTATION().getText().trim()
+      );
     }
 
     @Override

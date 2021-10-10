@@ -5,7 +5,6 @@ import io.github.mbarkley.rollens.db.SavedRollsDao;
 import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.jdbi.v3.core.Handle;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,13 +38,14 @@ public class Invoke implements Command<StringOutput> {
 
   private CompletableFuture<StringOutput> doInvoke(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.jdbi().open()) {
-        long guildId = context.commandEvent().getGuild().getIdLong();
-        return handle.attach(SavedRollsDao.class)
-                     .find(guildId, identifier, (byte) arguments.length)
-                     .orElseThrow(() -> new InvalidExpressionException(format("No saved roll found for `%s %d`", identifier, arguments.length)));
+      long guildId = context.commandEvent().getGuild().getIdLong();
+      return context.jdbi()
+                    .withExtension(
+                        SavedRollsDao.class,
+                        dao -> dao.find(guildId, identifier, (byte) arguments.length)
+                                  .orElseThrow(() -> new InvalidExpressionException(
+                                      format("No saved roll found for `%s %d`", identifier, arguments.length))));
 
-      }
     }, context.executorService()).thenCompose(savedRoll -> {
       final String expressionWithArgs = getSubstitutedExpression(savedRoll);
 

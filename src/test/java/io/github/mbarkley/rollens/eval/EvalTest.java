@@ -23,10 +23,21 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EvalTest {
+  static ExecutorService executorService;
+  static Parser parser;
   TestCommandEvent testCommandEvent;
   Jdbi jdbi;
-  ExecutorService executorService;
-  Parser parser;
+
+  @BeforeAll
+  public static void onetimeSetup() {
+    executorService = Executors.newCachedThreadPool();
+    parser = new Parser();
+  }
+
+  @AfterAll
+  public static void onetimeTeardown() {
+    executorService.shutdownNow();
+  }
 
   @BeforeEach
   public void setup() throws IOException {
@@ -37,16 +48,9 @@ public class EvalTest {
     testCommandEvent.setGuild(new TestGuild(123));
 
     final File dbFile = File.createTempFile("modus-rollens-", ".db");
+    System.out.printf("Created test DB [%s]%n", dbFile);
     dbFile.deleteOnExit();
     jdbi = DbUtil.initDb(dbFile.getAbsolutePath());
-    executorService = Executors.newFixedThreadPool(10);
-
-    parser = new Parser();
-  }
-
-  @AfterEach
-  public void tearDown() {
-    executorService.shutdownNow();
   }
 
   @Test
@@ -249,6 +253,61 @@ public class EvalTest {
                             loaded.value());
   }
 
+  @ParameterizedTest(name = "Annotation for \"{0}\"")
+  @MethodSource("listAnnotations")
+  public void list_should_include_annotations(
+      String description,
+      Random rand,
+      List<Command<?>> commands,
+      String expectedListOutput) throws InterruptedException, ExecutionException, TimeoutException {
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    final CompletableFuture[] futures = commands.stream()
+                                                .map(command -> command.execute(context))
+                                                .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
+
+    final StringOutput loaded = new ListSaved().execute(context).get(1, TimeUnit.SECONDS);
+
+    Assertions.assertEquals(expectedListOutput, loaded.value());
+  }
+
+  @ParameterizedTest(name = "Annotation for \"{0}\"")
+  @MethodSource("selectAnnotations")
+  public void select_prompts_should_include_annotations(
+      String description,
+      Random rand,
+      List<Command<?>> setupCommands,
+      SelectSaved selectCommand,
+      String annotationText) throws InterruptedException, ExecutionException, TimeoutException {
+    Command.ExecutionContext context = new Command.ExecutionContext(executorService, jdbi, parser, () -> rand, testCommandEvent);
+    final CompletableFuture[] futures = setupCommands.stream()
+                                                .map(command -> command.execute(context))
+                                                .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures).get(5, TimeUnit.SECONDS);
+
+    final Command.CommandOutput output = selectCommand.execute(context).get(1, TimeUnit.SECONDS);
+
+    assertContainsText(annotationText, output);
+  }
+
+  private void assertContainsText(String text, Command.CommandOutput output) {
+    boolean result = switch (output) {
+      case Command.CommandSelectOutput selectOutput -> selectOutput.prompt().contains(text)
+          || selectOutput.options()
+                         .stream()
+                         .anyMatch(opt -> opt.label().contains(text));
+      case Command.ArgumentSelectOutput selectOutput -> selectOutput.prompt().contains(text);
+      case Command.StringOutput stringOutput -> stringOutput.value().contains(text);
+    };
+
+    assert result : """
+        Expected output to display text:
+        %s
+                    
+        But only found:
+        %s""".formatted(text, output);
+  }
+
   @Test
   public void list_should_show_only_saved_from_relevant_guild() throws InterruptedException, ExecutionException, TimeoutException {
     // Setup
@@ -281,6 +340,234 @@ public class EvalTest {
     // test
     final StringOutput invoked = invoke.execute(context).get(1, TimeUnit.SECONDS);
     Assertions.assertEquals(result, invoked.value());
+  }
+
+  private Stream<Arguments> selectAnnotations() {
+    return Stream.of(
+        arguments(
+            "no arity, no parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of(), "2d6"),
+                new Annotate("foo", null, null, "Some text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            "Some text"
+        ),
+        arguments(
+            "no arity, no parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, null, "Some text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            ""
+        ),
+        arguments(
+            "no arity, parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, "a", "Some text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            ""
+        ),
+        arguments(
+            "no arity, parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, "a", "Some text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            "Some text"
+        ),
+        arguments(
+            "arity, no parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", 1, null, "Some text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            "Some text"
+        ),
+        arguments(
+            "arity, no parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", 1, null, "Some text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            ""
+        ),
+        arguments(
+            "arity, parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", 1, "a", "Some text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            ""
+        ),
+        arguments(
+            "arity, parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", 1, "a", "Some text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            "Some text"
+        ),
+        arguments(
+            "arity and no arity, no parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, null, "General text"),
+                new Annotate("foo", 1, null, "Specific text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            "Specific text"
+        ),
+        arguments(
+            "arity and no arity, no parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, null, "General text"),
+                new Annotate("foo", 1, null, "Specific text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            ""
+        ),
+        arguments(
+            "arity and no arity, parameter, command selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, "a", "General text"),
+                new Annotate("foo", 1, "a", "Specific text")
+            ),
+            new SelectSaved(
+                null,
+                null
+            ),
+            ""
+        ),
+        arguments(
+            "arity and no arity, parameter, arg selection",
+            new Random(1337),
+            List.of(
+                new Save("foo", List.of("a"), "{a}d6"),
+                new Annotate("foo", null, "a", "General text"),
+                new Annotate("foo", 1, "a", "Specific text")
+            ),
+            new SelectSaved(
+                new DeclarationLHS("foo", List.of("a")),
+                new int[0]
+            ),
+            "Specific text"
+        )
+    );
+  }
+
+  private Stream<Arguments> listAnnotations() {
+    return Stream.of(
+      arguments(
+          "no arity, no parameter",
+          new Random(1337),
+          List.of(
+              new Save("foo", List.of(), "2d6"),
+              new Annotate("foo", null, null, "Some text")
+          ),
+          """
+              __Saved Rolls__
+              `(foo) = 2d6 ! Some text`"""
+      ),
+      arguments(
+          "arity, no parameter",
+          new Random(1337),
+          List.of(
+              new Save("foo", List.of(), "2d6"),
+              new Annotate("foo", 0, null, "Some text")
+          ),
+          """
+              __Saved Rolls__
+              `(foo) = 2d6 ! Some text`"""
+      ),
+      arguments(
+          "arity and no arity, no parameter",
+          new Random(1337),
+          List.of(
+              new Save("foo", List.of(), "2d6"),
+              new Save("foo", List.of("a"), "{a}d6"),
+              new Annotate("foo", null, null, "Some text"),
+              new Annotate("foo", 1, null, "More specific text")
+          ),
+          """
+              __Saved Rolls__
+              `(foo) = 2d6 ! Some text`
+              `(foo a) = {a}d6 ! More specific text`"""
+      ),
+      arguments(
+          "no arity, parameter",
+          new Random(1337),
+          List.of(
+              new Save("foo", List.of("a"), "{a}d6"),
+              new Annotate("foo", null, "a", "Some text")
+          ),
+          """
+              __Saved Rolls__
+              `(foo a) = {a}d6`"""
+      ),
+      arguments(
+          "arity, parameter",
+          new Random(1337),
+          List.of(
+              new Save("foo", List.of("a"), "{a}d6"),
+              new Annotate("foo", 1, "a", "Some text")
+          ),
+          """
+              __Saved Rolls__
+              `(foo a) = {a}d6`"""
+      )
+    );
   }
 
   private Stream<Arguments> invocations() {
@@ -335,6 +622,7 @@ public class EvalTest {
 
   private static Stream<Arguments> guildOnlyCommands() {
     return Stream.of(
+        arguments(new Annotate("foo", null, null, "Some text"), "Cannot annotate saved rolls in direct messages"),
         arguments(new SelectSaved(null, null), "Cannot save and list rolls in direct messages"),
         arguments(new Save("foo", List.of(), "2d6"), "Cannot save rolls in direct messages"),
         arguments(new ListSaved(), "Cannot save and list rolls in direct messages"),

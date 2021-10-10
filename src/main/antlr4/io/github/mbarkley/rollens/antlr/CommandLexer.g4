@@ -1,6 +1,6 @@
 lexer grammar CommandLexer;
 
-WHITESPACE : (' ' | '\t')+ -> channel(HIDDEN);
+WHITESPACE : [ \t\r\n]+ -> channel(HIDDEN);
 
 NUMBER : [0-9]+;
 
@@ -48,8 +48,16 @@ REFERENCE : '{' IDENTIFIER '}';
 
 fragment VALUE : (NUMBER | REFERENCE);
 
-EXCLAMATION : '!';
+fragment EXCLAMATION : '!';
 
 START : (EXCLAMATION | DIVIDE) 'mr';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z_0-9]*;
+
+OPEN_ANNOTATION : EXCLAMATION -> mode(FREE_TEXT);
+
+mode FREE_TEXT;
+
+ANNOTATION : EOF;
+
+TEXT : . -> more;

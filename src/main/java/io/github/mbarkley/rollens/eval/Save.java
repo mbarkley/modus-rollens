@@ -6,7 +6,6 @@ import io.github.mbarkley.rollens.eval.Command.StringOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import org.jdbi.v3.core.Handle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -34,15 +33,13 @@ public class Save implements Command<StringOutput> {
   @NotNull
   private CompletableFuture<StringOutput> doSave(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
         SavedRoll savedRoll = new SavedRoll(guildId, identifier, parameters, rhs);
-        handle.attach(SavedRollsDao.class).insertOrReplace(savedRoll);
+        context.jdbi().useExtension(SavedRollsDao.class, dao -> dao.insertOrReplace(savedRoll));
 
         return new StringOutput(
             "Saved (%s %s)".formatted(identifier, String.join(" ", parameters))
         );
-      }
     }, context.executorService());
   }
 }

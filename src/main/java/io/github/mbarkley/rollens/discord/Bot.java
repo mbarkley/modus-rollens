@@ -35,7 +35,10 @@ import static java.lang.String.format;
 @RequiredArgsConstructor
 public class Bot extends ListenerAdapter {
   public static final String COMMAND_SELECT_MENU_ID = "command-select-menu";
-  public static final String ARGUMENT_SELECTOR_ID = "argument-selector";
+  public static final String ARITY_OPTION_NAME = "arity";
+  public static final String ARITY_OPTION_DESCRIPTION = "The number of parameters in the saved roll";
+  public static final String ROLL_NAME_OPTION_NAME = "roll-name";
+  public static final String ROLL_NAME_OPTION_DESCRIPTION = "The name of a saved roll";
   private final Parser parser;
   private final Jdbi jdbi;
   private final ExecutorService executorService;
@@ -54,14 +57,14 @@ public class Bot extends ListenerAdapter {
     final SubcommandData delete = new SubcommandData("delete", "Delete a saved roll by name");
     delete.addOption(
         OptionType.STRING,
-        "save-name",
-        "The name of a saved roll",
+        ROLL_NAME_OPTION_NAME,
+        ROLL_NAME_OPTION_DESCRIPTION,
         true
     );
     delete.addOption(
         OptionType.INTEGER,
-        "arity",
-        "The number of parameters in the saved roll",
+        ARITY_OPTION_NAME,
+        ARITY_OPTION_DESCRIPTION,
         true
     );
     final SubcommandData rollCmd = new SubcommandData("roll", "Roll some dice");

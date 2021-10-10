@@ -64,6 +64,14 @@ public class ParserTest {
     Assertions.assertEquals(Optional.of(result), parsed);
   }
 
+  @ParameterizedTest(name = "annotate \"{0}\" as {1}")
+  @MethodSource("annotates")
+  public void should_parse_annotate(String input, Object result) {
+    final TestCommandEvent message = new TestCommandEvent(input);
+    final Optional<Command<?>> parsed = parser.parse(message.getCommand());
+    Assertions.assertEquals(Optional.of(result), parsed);
+  }
+
   @ParameterizedTest(name = "bad expression \"{0}\"")
   @MethodSource("badExpressions")
   public void should_not_parse_bad_expressions(String input) {
@@ -112,6 +120,18 @@ public class ParserTest {
             .of("save (foo a b c) = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}")),
         CommandTestCase
             .of("save foo a b c = {a}d{b} + {c}", new Save("foo", List.of("a", "b", "c"), "{a}d{b} + {c}"))
+    ).flatMap(testCase -> Stream.of(
+        arguments("!mr " + testCase.expression(), testCase.command()),
+        arguments("/mr " + testCase.expression(), testCase.command())
+    ));
+  }
+
+  private static Stream<Arguments> annotates() {
+    return Stream.of(
+        CommandTestCase.of("annotate foo ! Some text", new Annotate("foo", null, null, "Some text")),
+        CommandTestCase.of("annotate foo 1 ! Some text", new Annotate("foo", 1, null, "Some text")),
+        CommandTestCase.of("annotate foo arg ! Some text", new Annotate("foo", null, "arg", "Some text")),
+        CommandTestCase.of("annotate foo 2 arg ! Some text", new Annotate("foo", 2, "arg", "Some text"))
     ).flatMap(testCase -> Stream.of(
         arguments("!mr " + testCase.expression(), testCase.command()),
         arguments("/mr " + testCase.expression(), testCase.command())

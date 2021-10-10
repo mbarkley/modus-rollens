@@ -36,6 +36,7 @@ public class Delete implements Command<StringOutput> {
       try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
         final SavedRollsDao dao = handle.attach(SavedRollsDao.class);
+        // FIXME make atomic delete
         final Optional<SavedRoll> found = dao.find(guildId, identifier, (byte) arity);
         if (found.isPresent()) {
           dao.delete(guildId, identifier, (byte) arity);

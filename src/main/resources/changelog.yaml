@@ -42,3 +42,29 @@ databaseChangeLog:
                   name: roll_name
               - column:
                   name: arity
+  - changeSet:
+      id: create-annotation-table
+      author: mbarkley
+      changes:
+        - sql:
+            dbms: sqlite
+            sql: |
+              PRAGMA foreign_keys = ON;
+              CREATE TABLE saved_roll_annotations(
+                guild_id    BIGINT NOT NULL,
+                roll_name   TEXT NOT NULL,
+                arity       TINYINT,
+                parameter   TINYINT,
+                annotation  TEXT NOT NULL,
+                PRIMARY KEY(guild_id, roll_name, arity, parameter),
+                FOREIGN KEY(guild_id, roll_name, arity) REFERENCES saved_rolls(guild_id, roll_name, arity)
+              );
+        - createIndex:
+            indexName: idx_saved_roll_annotations
+            tableName: saved_roll_annotations
+            unique: false
+            columns:
+              - column:
+                  name: guild_id
+              - column:
+                  name: roll_name

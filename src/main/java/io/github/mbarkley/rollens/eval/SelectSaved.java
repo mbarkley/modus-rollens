@@ -1,19 +1,21 @@
 package io.github.mbarkley.rollens.eval;
 
-import io.github.mbarkley.rollens.db.SavedRoll;
+import io.github.mbarkley.rollens.db.AnnotatedSavedRoll;
+import io.github.mbarkley.rollens.db.SavedAnnotation;
 import io.github.mbarkley.rollens.db.SavedRollsDao;
 import io.github.mbarkley.rollens.eval.Command.CommandOutput;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import org.jdbi.v3.core.Handle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -31,7 +33,7 @@ public class SelectSaved implements Command<CommandOutput> {
       if (declarationLHS == null) {
         return doExpressionSelect(context);
       } else if (declarationLHS.parameters().size() > arguments.length) {
-        return doArgSelect(declarationLHS, arguments);
+        return doArgSelect(context, declarationLHS, arguments);
       } else if (declarationLHS.parameters().size() == arguments.length) {
         return new Invoke(declarationLHS.name(), arguments).execute(context);
       } else {
@@ -43,41 +45,63 @@ public class SelectSaved implements Command<CommandOutput> {
   }
 
   @NotNull
-  private static CompletableFuture<CommandOutput> doArgSelect(
+  private static CompletableFuture<ArgumentSelectOutput> doArgSelect(
+      ExecutionContext context,
       @NotNull DeclarationLHS declarationLHS,
       int[] arguments) {
     assert declarationLHS.parameters().size() > arguments.length;
-    final String nextParam = declarationLHS.parameters().get(arguments.length);
 
-    final String parameterList = String.join(" ", declarationLHS.parameters());
-    final String argList = Arrays.stream(arguments)
-                                 .mapToObj(" %d"::formatted)
-                                 .collect(Collectors.joining());
-    return completedFuture(
-        new ArgumentSelectOutput(
-            "Select `%s` for `%s %s`".formatted(nextParam, declarationLHS.name(), parameterList),
-            declarationLHS.name(),
-            declarationLHS.parameters(),
-            "!mr select %s %s%s".formatted(declarationLHS.name(), parameterList, argList)
-        )
-    );
+    return CompletableFuture.supplyAsync(() -> {
+      final String nextParam = declarationLHS.parameters().get(arguments.length);
+      final long guildId = context.commandEvent().getGuild().getIdLong();
+      final Optional<SavedAnnotation> foundAnnotation =
+          context.jdbi()
+                 .withExtension(SavedRollsDao.class, dao -> dao.findRollAnnotation(
+                     guildId,
+                     declarationLHS.name(),
+                     (byte) declarationLHS.parameters().size(),
+                     nextParam)
+                 );
+      final String paramText = foundAnnotation.map(text -> "`%s`\n%s".formatted(nextParam, text.getAnnotation()))
+                                              .orElseGet(() -> "`%s`".formatted(nextParam));
+      final String paramAndArgList = Stream.concat(
+                                               declarationLHS.parameters().stream(),
+                                               Arrays.stream(arguments).mapToObj(String::valueOf)
+                                           ).map(" %s"::formatted)
+                                           .collect(Collectors.joining());
+
+      return new ArgumentSelectOutput(
+          "Select %s".formatted(paramText),
+          declarationLHS.name(),
+          declarationLHS.parameters(),
+          "!mr select %s%s".formatted(declarationLHS.name(), paramAndArgList)
+      );
+    });
   }
 
   @NotNull
-  private CompletableFuture<CommandOutput> doExpressionSelect(ExecutionContext context) {
+  private CompletableFuture<CommandSelectOutput> doExpressionSelect(ExecutionContext context) {
     return CompletableFuture.supplyAsync(() -> {
-      try (Handle handle = context.jdbi().open()) {
         long guildId = context.commandEvent().getGuild().getIdLong();
-        final List<SavedRoll> savedRolls = handle.attach(SavedRollsDao.class)
-                                                 .findByGuild(guildId);
-        savedRolls.sort(Comparator.comparing(SavedRoll::getRollName));
+      final List<AnnotatedSavedRoll> savedRolls = context.jdbi()
+                                                         .withExtension(
+                                                             SavedRollsDao.class,
+                                                             dao -> dao.findAnnotatedByGuild(guildId));
+        savedRolls.sort(Comparator.comparing(AnnotatedSavedRoll::getRollName));
         final List<Option> options =
             savedRolls.stream()
-                      .map(sr -> new Option(sr.toLHS(), "!mr select %s".formatted(sr.toLHS())))
+                      .map(sr -> new Option(expressionLabel(sr), "!mr select %s".formatted(sr.toLHS())))
                       .toList();
 
         return new CommandSelectOutput("Select a roll", options);
-      }
     }, context.executorService());
+  }
+
+  private String expressionLabel(AnnotatedSavedRoll sr) {
+    if (sr.getAnnotation() != null) {
+      return "%s ! %s".formatted(sr.toLHS(), sr.getAnnotation());
+    } else {
+      return sr.toLHS();
+    }
   }
 }

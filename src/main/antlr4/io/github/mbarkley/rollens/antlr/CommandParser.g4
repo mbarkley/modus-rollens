@@ -17,6 +17,7 @@ expression
     | delete
     | help
     | select
+    | annotate
     | rollKeyword? invocation
     ;
 
@@ -45,6 +46,11 @@ list
 select
     : {getCurrentToken().getText().equals("select")}? IDENTIFIER
     | {getCurrentToken().getText().equals("select")}? IDENTIFIER declarationLHS NUMBER*
+    ;
+
+annotate
+    : {getCurrentToken().getText().equals("annotate")}?
+        IDENTIFIER function=IDENTIFIER arity=NUMBER? parameter=IDENTIFIER? OPEN_ANNOTATION ANNOTATION
     ;
 
 declarationLHS
