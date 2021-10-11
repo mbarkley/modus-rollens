@@ -3,7 +3,6 @@ package io.github.mbarkley.rollens.parse;
 import io.github.mbarkley.rollens.eval.*;
 import io.github.mbarkley.rollens.parse.SlashCommandParser.*;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -56,7 +55,6 @@ public class SlashCommandParserTest {
     Assertions.assertEquals(new SelectSaved(null, null), parsed);
   }
 
-  @Disabled
   @ParameterizedTest(name = "annotate \"{0}\" as {1}")
   @MethodSource("annotates")
   public void should_parse_annotate(SlashCommand input, Object result) throws SlashCommandParser.InvalidSlashCommand {
@@ -143,7 +141,60 @@ public class SlashCommandParserTest {
   }
 
   private static Stream<Arguments> annotates() {
-    return Stream.of();
+    return Stream.of(
+        CommandTestCase.of(new SlashCommand(
+                               List.of("mr", "annotate"),
+                               List.of(
+                                   new StringOption(StringOptionIdentifier.ANNOTATION, "Some text"),
+                                   new StringOption(StringOptionIdentifier.ROLL_NAME, "foo")
+                               )),
+                           new Annotate(
+                               "foo",
+                               null,
+                               null,
+                               "Some text"
+                           )),
+        CommandTestCase.of(new SlashCommand(
+                               List.of("mr", "annotate"),
+                               List.of(
+                                   new StringOption(StringOptionIdentifier.ANNOTATION, "Some text"),
+                                   new StringOption(StringOptionIdentifier.ROLL_NAME, "foo"),
+                                   new IntegerOption(IntegerOptionIdentifier.ARITY, 0L)
+                               )),
+                           new Annotate(
+                               "foo",
+                               0,
+                               null,
+                               "Some text"
+                           )),
+        CommandTestCase.of(new SlashCommand(
+                               List.of("mr", "annotate"),
+                               List.of(
+                                   new StringOption(StringOptionIdentifier.ANNOTATION, "Some text"),
+                                   new StringOption(StringOptionIdentifier.ROLL_NAME, "foo"),
+                                   new StringOption(StringOptionIdentifier.PARAMETER, "arg")
+                               )),
+                           new Annotate(
+                               "foo",
+                               null,
+                               "arg",
+                               "Some text"
+                           )),
+        CommandTestCase.of(new SlashCommand(
+                               List.of("mr", "annotate"),
+                               List.of(
+                                   new StringOption(StringOptionIdentifier.ANNOTATION, "Some text"),
+                                   new StringOption(StringOptionIdentifier.ROLL_NAME, "foo"),
+                                   new IntegerOption(IntegerOptionIdentifier.ARITY, 1L),
+                                   new StringOption(StringOptionIdentifier.PARAMETER, "arg")
+                               )),
+                           new Annotate(
+                               "foo",
+                               1,
+                               "arg",
+                               "Some text"
+                           ))
+    ).map(testCase -> arguments(testCase.input(), testCase.output()));
   }
 
   private static Stream<Arguments> badExpressions() {

@@ -210,7 +210,7 @@ public class SlashCommandParser {
   public record IntegerOption(IntegerOptionIdentifier optionName, Long value) implements Option<Long> {
     @Override
     public String name() {
-      throw new UnsupportedOperationException();
+      return optionName.getName();
     }
   }
 
@@ -222,7 +222,8 @@ public class SlashCommandParser {
       textInput = "/mr annotate %s ! %s".formatted(
           input.options().stream().filter(option -> !option.name().equals(ANNOTATION.getName()))
                .map(Option::valueAsString).collect(Collectors.joining(" ")),
-          input.options().stream().filter(option -> option.name().equals(ANNOTATION.getName())).findFirst()
+          input.options().stream().filter(option -> option.name().equals(ANNOTATION.getName()))
+               .map(Option::valueAsString).findFirst()
                .orElseThrow(() -> new InvalidSlashCommand("Could not recognize command. See `/mr help` for valid examples."))
       );
     } else {
